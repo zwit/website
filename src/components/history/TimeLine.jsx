@@ -5,7 +5,8 @@ import Circle from '../forms/Circle';
 import moment from 'moment';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import Select from 'react-select'
+import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { TwitterPicker } from 'react-color';
 import { TextField, Switch, FormControlLabel, CardActionArea, Card, CardMedia, Typography, CardContent } from '@material-ui/core';
 import DateFnsUtils from '@date-io/date-fns';
@@ -17,6 +18,9 @@ import {
 import debounce from 'debounce';
 import { Map, List } from 'immutable';
 import backgroundMedieval from '../../images/background-medieval.png';
+import InfiniteCalendar from 'react-infinite-calendar';
+import 'react-infinite-calendar/styles.css'; // Make sure to import the default stylesheet
+import { Button } from '@material-ui/core';
 
 class TimeLine extends React.Component {
   constructor(props) {
@@ -48,9 +52,16 @@ class TimeLine extends React.Component {
     this.fetchActivity = this.fetchActivity.bind(this);
     this.toggleDisplayEdition = this.toggleDisplayEdition.bind(this);
     this.selectActivity = this.selectActivity.bind(this);
+    this.setActivityList = this.setActivityList.bind(this);
+    this.deleteActivity = this.deleteActivity.bind(this);
 
     this.debouncedPostDate = debounce(
       this.postDate.bind(this),
+      500
+    );
+
+    this.debouncedPostActivity = debounce(
+      this.postActivity.bind(this),
       500
     );
   }
@@ -69,6 +80,8 @@ class TimeLine extends React.Component {
   }
 
   fetchActivity() {
+    const { selectedActivity } = this.state;
+
     return fetch('/activity')
       .then(res => res.json())
       .then(activityList => {
@@ -77,23 +90,30 @@ class TimeLine extends React.Component {
           activityList: stateActivityList,
         });
 
-        this.selectActivity(stateActivityList.getIn([0, 'id']));
+        if (!selectedActivity) {
+          this.selectActivity(stateActivityList.getIn([0, 'id']));
+        }
       });
   }
 
   fetchDates() {
-    const { selectedDate } = this.state;
-
     return fetch('/event')
       .then(res => res.json())
       .then(dateList => {
-        const stateDateList = List(dateList.map(date => Map(date)));
         this.setState({ 
-          dateList: stateDateList,
-          selectedDate: selectedDate ? selectedDate : stateDateList.getIn([0, 'date'])
+          dateList: List(dateList.map(date => Map(date))),
         });
 
         this.fetchActivity();
+
+        // fetch('/event', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Accept': 'application/json',
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify(List(dateList.map(date => Map(date))).get(2).set('text', '<p>some text range 2</p>'))
+        // });
       });
   }
 
@@ -117,31 +137,75 @@ class TimeLine extends React.Component {
     });
   }
 
+  postActivity(activity) {
+    fetch('/activity', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(activity)
+    }).then(() => {
+      this.fetchActivity();
+    });
+  }
+
+  deleteActivity(activity) {
+    fetch(`/activity/${activity.get('id')}`, {
+      method: 'DELETE',
+      body: JSON.stringify({})
+    }).then(() => {
+      this.fetchActivity();
+    });
+  }
+
+  setActivityList(path, value) {
+    const { activityList } = this.state;
+
+    const newActivityList = activityList.setIn(path, value);
+
+    this.setState({
+      activityList: newActivityList
+    })
+
+    this.debouncedPostActivity(newActivityList.get(path[0]));
+  }
+
   selectActivity(activityId) {
     const { dateList } = this.state;
 
-    const orderedDateList = dateList.sort(function(a,b){
-      return new Date(a.get('date')) - new Date(b.get('date'));
-    });
+    const filteredDateList = dateList
+      .filter(date => date.get('activity').id === activityId)
+      .sort(function(a,b){
+        return new Date(a.get('date')) - new Date(b.get('date'));
+      });
 
-    const filteredDateList = orderedDateList.filter(date => date.get('activity').id === activityId);
-
-    this.setState({
+    this.setState(() => ({
       selectedActivity: activityId,
-    });
-
-    this.toggleSelected(filteredDateList.size ? filteredDateList.getIn([0, 'date']) : null)
+    }), () => {
+      this.toggleSelected(filteredDateList.size ? filteredDateList.getIn([0, 'date']) : '');
+    });  
   }
 
   setDateList(path, value) {
-    const { dateList } = this.state;
-    const newDateList = dateList.setIn(path, value);
+    const { dateList, selectedActivity } = this.state;
+    
+    const filteredDateList = dateList
+      .filter(date => date.get('activity').id === selectedActivity)
+      .sort(function(a,b){
+        return new Date(a.get('date')) - new Date(b.get('date'));
+      });
+
+    const dateListIndex = dateList.findIndex(date => date.get('id') === filteredDateList.get(path[0]).get('id'));
+
+    const newDateList = dateList.setIn([dateListIndex, path[1]], value);
 
     this.setState({
       dateList: newDateList,
+      selectedDate: newDateList.getIn([dateListIndex, 'date'])
     })
 
-    this.debouncedPostDate(newDateList.get(path[0]));
+    this.debouncedPostDate(newDateList.get(dateListIndex));
   }
 
   onKeyup(event) {
@@ -202,15 +266,20 @@ class TimeLine extends React.Component {
   }
 
   toggleSelected(selectedDate) {
-    const { timeDiff, width, dateList } = this.state;
+    const { timeDiff, width, dateList, selectedActivity } = this.state;
     const { startDate } = this.props;
 
     const orderedDateList = dateList
+      .filter(date => date.get('activity').id === selectedActivity)
       .sort(function(a,b){
         return new Date(a.get('date')) - new Date(b.get('date'));
       });
 
     const index = orderedDateList.findIndex(date => date.get('date') === selectedDate);
+
+    if (index === -1) {
+      return;
+    }
 
     const nextDate = orderedDateList.get(index);
 
@@ -219,9 +288,11 @@ class TimeLine extends React.Component {
       shift -= ((moment(nextDate.get('endDate')).diff(moment(nextDate.get('date'))) / timeDiff) * width) / 2
     }
 
+    const offsetX = - ((moment(nextDate.get('date')).diff(moment(startDate)) / timeDiff) * width) + shift;
+
     this.setState({
       selectedDate,
-      offsetX: - ((moment(nextDate.get('date')).diff(moment(startDate)) / timeDiff) * width) + shift
+      offsetX,
     })
   }
 
@@ -246,22 +317,22 @@ class TimeLine extends React.Component {
 
     this.setState({
       displayEdition: !displayEdition,
-    })
+    });
   }
 
   render() {
     const { timeDiff, width, selectedDate, offsetX, dateList, displayEdition, activityList, selectedActivity } = this.state;
     const { startDate, lineHeight, pointSize } = this.props;
 
-    const orderedDateList = dateList.sort(function(a,b){
-      return new Date(a.get('date')) - new Date(b.get('date'));
-    });
-
-    const filteredDateList = orderedDateList.filter(date => date.get('activity').id === selectedActivity);
+    const filteredDateList = dateList
+      .filter(date => date.get('activity').id === selectedActivity)
+      .sort(function(a,b){
+        return new Date(a.get('date')) - new Date(b.get('date'));
+      });
     
     return (
       <>
-        {activityList.map(activity => (
+        {activityList.map((activity, index) => (
           <StyledCard className={selectedActivity === activity.get('id') ? 'selected' : ''}>
             <CardActionArea onClick={() => this.selectActivity(activity.get('id'))}>
               <CardMedia
@@ -273,15 +344,48 @@ class TimeLine extends React.Component {
               />
               <CardContent>
                 <Typography gutterBottom variant="h5" component="h2">
-                  {activity.get('title')}
+                  {!displayEdition && activity.get('title')}
+                  {displayEdition && <TextField 
+                    id="standard-basic" 
+                    label="Title" 
+                    value={activity.get('title')}
+                    onChange={(event) => this.setActivityList([index, 'title'], event.target.value)}
+                  />}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" component="p">
-                  {activity.get('description')}
+                  {!displayEdition && activity.get('description')}
+                  {displayEdition && <TextField 
+                    id="standard-basic" 
+                    label="Description" 
+                    style={{width: 250}}
+                    value={activity.get('description')}
+                    onChange={(event) => this.setActivityList([index, 'description'], event.target.value)}
+                  />}
                 </Typography>
+                {displayEdition && <DeleteIcon onClick={() => this.deleteActivity(activity)} />}
               </CardContent>
             </CardActionArea>
           </StyledCard>
         ))}
+        {displayEdition && <StyledCard>
+          <CardActionArea onClick={() => {this.postActivity({title: 'Title', description: 'Description'})}}>
+            <CardMedia
+              component="img"
+              alt="Add"
+              height="140"
+              image={backgroundMedieval}
+              title={'Add'}
+            />
+            <CardContent>
+              <Typography gutterBottom variant="h5" component="h2">
+                {'Title'}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" component="p">
+                {'Description'}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </StyledCard>}
         <div><FormControlLabel
           control={<Switch
             checked={displayEdition}
@@ -291,6 +395,14 @@ class TimeLine extends React.Component {
           />}
           label="Editer"
         /></div>
+        {displayEdition && <Button 
+          variant="contained" 
+          onClick={() => {this.postDate({
+            type: 'range', innerText: 'event', text: '<p>text</p>', color: 'white', activity: { id: selectedActivity}, background: 'repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px)', date: moment().format("YYYY-MM-DD HH:mm:ss"), endDate: moment().add(1, 'year').format("YYYY-MM-DD HH:mm:ss")
+          })}}
+        >
+          Add Event
+        </Button>}
         <MoveButton>
           <PrevButton onClick={this.togglePrev}>Prev</PrevButton>
           <NextButton onClick={this.toggleNext}>Next</NextButton>
@@ -300,7 +412,7 @@ class TimeLine extends React.Component {
           <Line id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
           { filteredDateList.map((date, index) => (
             <>
-              { date.get('type') === 'point' && (
+              { date.get('type') === 'point' &&  (
                 <StyledCircle
                   circleStyling={{
                     width: pointSize,
@@ -317,7 +429,7 @@ class TimeLine extends React.Component {
                 />
               )}
 
-              { date.get('type') === 'range' && (
+              { date.get('type') === 'range' &&  (
                 <>
                   <RangeElement 
                     className={selectedDate === date.get('date') ? 'selected' : ''}
@@ -335,8 +447,8 @@ class TimeLine extends React.Component {
                     }}
                     onClick={() => this.toggleSelected(date.get('date'))}
                   >
-                    {!!moment(date.get('date')).diff(moment(orderedDateList.get(index - 1).get('endDate'))) && (<RangeDateStart>{moment(date.get('date')).format('YYYY')}</RangeDateStart>)}
-                    <RangeDateEnd>{moment(date.get('endDate')).format('YYYY')}</RangeDateEnd>
+                    {!!moment(date.get('date')).diff(moment(filteredDateList.get(index - 1).get('endDate'))) && (<RangeDateStart>{moment(date.get('date')).format('YYYY').replace(/^0+/, '')}</RangeDateStart>)}
+                    <RangeDateEnd>{moment(date.get('endDate')).format('YYYY').replace(/^0+/, '')}</RangeDateEnd>
                     <RangeText style={{marginTop: 14}}>{date.get('innerText')}</RangeText>
                   </RangeElement>
                 </>
@@ -347,11 +459,10 @@ class TimeLine extends React.Component {
         <EditorContainer>
           {filteredDateList.map((date, index) => (
             <>
-              {selectedDate === date.get('date') && (
+              {selectedDate === date.get('date') &&  (
                 <>
                   {displayEdition && (
                     <>
-                      
                       <TextField
                         label="Inner text" 
                         value={date.get('innerText')} 
@@ -374,19 +485,7 @@ class TimeLine extends React.Component {
                           options={[{value: 'range', label: 'range'}, {value: 'point', label: 'point'}]}
                         />
                       </SelectRangeText>
-                      {/* <MuiPickersUtilsProvider utils={DateFnsUtils}><KeyboardDatePicker
-              disableToolbar
-              variant="inline"
-              format="MM/dd/yyyy"
-              margin="normal"
-              id="date-picker-inline"
-              label="Date picker inline"
-              value={new Date(date.get('date'))}
-              onChange={(date) => this.setDateList([index, 'date'], date)}
-              KeyboardButtonProps={{
-                'aria-label': 'change date',
-              }}
-            /></MuiPickersUtilsProvider> */}
+                      
                       <TwitterPicker
                         triangle='hide'
                         width="100%"
@@ -394,38 +493,42 @@ class TimeLine extends React.Component {
                         onChange={(color) => this.setDateList([index, 'color'], color.hex)}
                         colors={["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#ffffff"]}
                       />
+                      <CalendarContainer>
+                        <InfiniteCalendar
+                          width={250}
+                          height={200}
+                          selected={new Date(date.get('date'))}
+                          min={new Date(-2000, 0, 1)}
+                          minDate={new Date(-2000, 0, 1)}
+                          display='years'
+                          displayOptions={{
+                            showMonthsForYears: false,
+                            showWeekdays: false,
+                            showOverlay: false,
+                          }}
+                          onSelect={(date) => this.setDateList([index, 'date'], moment(date).format("YYYY-MM-DD HH:mm:ss"))}
+                        />
+                      </CalendarContainer>
+                      {date.get('type') === 'range' && 
+                        <CalendarContainer>
+                          <InfiniteCalendar
+                            width={250}
+                            height={200}
+                            min={new Date(-2000, 0, 1)}
+                            minDate={new Date(-2000, 0, 1)}
+                            selected={new Date(date.get('endDate'))}
+                            display='years'
+                            displayOptions={{
+                              showMonthsForYears: false,
+                              showWeekdays: false,
+                              showOverlay: false,
+                            }}
+                            onSelect={(date) => this.setDateList([index, 'endDate'], moment(date).format("YYYY-MM-DD HH:mm:ss"))}
+                          />
+                        </CalendarContainer>
+                      }
                     </>
                   )}
-                  
-                  {/* <CalendarContainer><InfiniteCalendar
-                    width={150}
-                    height={100}
-                    selected={new Date(date.get('date'))}
-                    disabledDays={[0,6]}
-                    display='years'
-                    displayOptions={{
-                      showHeader: false,
-                      showMonthsForYears: false,
-                      showWeekdays: false,
-                      showOverlay: false,
-                    }}
-                    onSelect={(date) => setDateList([index, 'date'], date.getFullYear().toString())}
-      
-                  /></CalendarContainer>
-                  {date.get('type') === 'range' && <CalendarContainer><InfiniteCalendar
-                    width={150}
-                    height={100}
-                    selected={new Date(date.get('endDate'))}
-                    display='years'
-                    displayOptions={{
-                      showHeader: false,
-                      showMonthsForYears: false,
-                      showWeekdays: false,
-                      showOverlay: false,
-                    }}
-                    onSelect={(date) => setDateList([index, 'endDate'], date.getFullYear().toString())}
-                    disabledDays={[0,6]}
-                  /></CalendarContainer>} */}
                   <ContentDate>
                     <ReactQuill
                       theme="snow" 
@@ -473,6 +576,8 @@ const StyledCard = styled(Card)`
 
 const CalendarContainer = styled.div`
   margin: auto;
+  display: inline-block;
+  padding: 20px;
 `;
 
 const SelectRangeText = styled.div`
@@ -602,6 +707,7 @@ const PrevButton = styled.div`
 
 const ContentDate = styled.div`
   padding: 10px;
+  display: inline-block;
 `;
 
 const RangeText = styled.div`
