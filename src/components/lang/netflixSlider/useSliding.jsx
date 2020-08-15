@@ -27,7 +27,7 @@ const useSliding = (elementWidth, countElements) => {
   }
 
   const slideProps = {
-    style: { transform: `translate3d(${distance}px, 0, 0)` }
+    style: { transform: `translate(${distance}px, 0)` }
   };
 
   const hasPrev = distance < 0;

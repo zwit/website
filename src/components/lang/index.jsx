@@ -12,7 +12,6 @@ const Lang = () => (
 )
 
 const HomeButton = styled.div`
-  padding: 20px;
   a {
     text-decoration: none;
   }

@@ -1,3 +1,5 @@
+export const apiPath = "/api";
+
 export function hashCode(str) { // java String#hashCode
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -14,9 +16,9 @@ export function intToRGB(i){
     return "00000".substring(0, 6 - c.length) + c;
 }
 
-var ModelViewer = require('metamask-logo');
-
 export function setMetamaskLogo(width, height, metamaskFound, selectedAddress, id) {
+  var ModelViewer = require('metamask-logo');
+
   // To render with fixed dimensions:
   var viewer = ModelViewer({
 
@@ -83,3 +85,9 @@ export function getNetwork(networkId) {
       return 'UNKNOWN';
   }
 }
+
+export const SEC = 1000;
+export const MIN = SEC * 60;
+export const HOUR = MIN * 60;
+export const DAY = HOUR * 24;
+export const YEAR = DAY * 365;

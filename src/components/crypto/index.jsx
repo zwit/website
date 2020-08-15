@@ -51,7 +51,6 @@ class Crypto extends React.Component {
 }
 
 const HomeButton = styled.div`
-  padding: 20px;
   a {
     text-decoration: none;
   }

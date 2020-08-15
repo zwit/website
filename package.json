@@ -18,6 +18,7 @@
     "metamask-logo": "^2.3.1",
     "moment": "^2.27.0",
     "node-sass": "^4.14.1",
+    "quill-image-uploader": "^1.2.2",
     "react": "^16.13.1",
     "react-color": "^2.18.1",
     "react-copy-to-clipboard": "^5.0.2",
@@ -29,6 +30,8 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-select": "^3.1.0",
+    "react-spring": "^8.0.27",
+    "react-use-gesture": "^7.0.15",
     "source-map-explorer": "^2.4.2",
     "styled-components": "^5.1.1",
     "web3": "^1.2.11"

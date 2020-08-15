@@ -1,109 +1,113 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Map, List } from 'immutable';
+import SimpleCard from '../common/SimpleCard';
+import Avatar from '@material-ui/core/Avatar';
+import { makeStyles } from '@material-ui/core/styles';
+import { deepOrange, deepPurple } from '@material-ui/core/colors';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
-import { CardActionArea, Card, CardMedia, Typography, CardContent } from '@material-ui/core';
-import backgroundMedieval from '../../images/background-medieval.png';
 import matrix from '../../images/matrix.png';
 import tintin from '../../images/tintin.png';
 import eratosthene from '../../images/eratosthene.png';
+import interstellarBooks from '../../images/interstellar-books.png';
+import yellowSubmarine from '../../images/yellow-submarine.png';
+import oss117 from '../../images/oss117.png';
+import ai from '../../images/ai.png';
+import stats from '../../images/stats.png';
 
-const Home = () => (
-  <div>
-    <Link to="/history">
-      <StyledCard>
-        <CardActionArea>
-          <CardMedia
-            component="img"
-            alt="History"
-            height="140"
-            image={backgroundMedieval}
-            title={"History"}
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="h2">
-              History
-            </Typography>
-            <Typography variant="body2" color="textSecondary" component="p">
-              History category
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-      </StyledCard>
-    </Link>
+const useStyles = makeStyles((theme) => ({
+  root: {
+    '& > *': {
+      margin: theme.spacing(1),
+    },
+  },
+  header: {
+    height: 50,
+  },
+  avatar: {
+    float: 'right',
+    color: theme.palette.getContrastText(deepOrange[500]),
+    backgroundColor: deepOrange[500],
+  },
+}));
 
-    <Link to="/lang">
-      <StyledCard>
-        <CardActionArea>
-          <CardMedia
-            component="img"
-            alt="Lang"
-            height="140"
-            image={tintin}
-            title={"Lang"}
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="h2">
-              Lang
-            </Typography>
-            <Typography variant="body2" color="textSecondary" component="p">
-              Lang category
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-      </StyledCard>
-    </Link>
+const Home = () => {
+  const classes = useStyles();
+  const [sideProjectList, setSideProjectList] = useState(List([Map({
+    url: '/history',
+    title: 'History',
+    image: oss117,
+    description: 'History timeline',
+    position: 1,
+  }), Map({
+    url: '/lang',
+    title: 'Lang',
+    image: tintin,
+    description: 'Lang learning',
+    position: 4,
+  }), Map({
+    url: '/science',
+    title: 'Science',
+    image: eratosthene,
+    description: 'Science timeline',
+    position: 3,
+  }), Map({
+    url: '/art',
+    title: 'Art',
+    image: yellowSubmarine,
+    description: 'Art timeline',
+    position: 2,
+  }), Map({
+    url: '/book',
+    title: 'Book',
+    image: interstellarBooks,
+    description: 'Booknotes',
+    position: 5,
+  }), Map({
+    url: '/stats',
+    title: 'Stats',
+    image: stats,
+    description: 'Stats charts',
+    position: 6,
+  }), Map({
+    url: '/ai',
+    title: 'ML projects',
+    image: ai,
+    description: 'ML test',
+    position: 7,
+  }), Map({
+    url: '/crypto',
+    title: 'Crypto',
+    image: matrix,
+    description: 'Crypto desc',
+    position: 8,
+  })]));
 
-    <Link to="/science">
-      <StyledCard>
-        <CardActionArea>
-          <CardMedia
-            component="img"
-            alt="Science"
-            height="140"
-            image={eratosthene}
-            title={"Science"}
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="h2">
-              Science
-            </Typography>
-            <Typography variant="body2" color="textSecondary" component="p">
-            Science category
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-      </StyledCard>
-    </Link>
+  useEffect(() => {
+    // fetch('/api/activity')
+    //   .then(res => res.json())
+    //   .then(sideProjectList => {
+    //     // setSideProjectList(List(sideProjectList.map(activity => Map(activity))));
+    //   });
+    fetch('http://zwit.xyz:9200/_cat/health?v')
+      .then(res => res.json())
+      .then(sideProjectList => {
+        // setSideProjectList(List(sideProjectList.map(activity => Map(activity))));
+      });
+  })
 
-    <Link to="/crypto">
-      <StyledCard>
-        <CardActionArea>
-          <CardMedia
-            component="img"
-            alt="Crypto"
-            height="140"
-            image={matrix}
-            title={"Crypto"}
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="h2">
-            Crypto
-            </Typography>
-            <Typography variant="body2" color="textSecondary" component="p">
-            Crypto category
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-      </StyledCard>
-    </Link>
-  </div>
-)
-
-const StyledCard = styled(Card)`
-  display: inline-block;
-  margin-left: 20px;
-  margin-top: 20px;
-  max-width: 300px;
-`;
+  return (
+    <div className={classes.root}>
+      <div className={classes.header}><Avatar className={classes.avatar}>J</Avatar></div>
+      {sideProjectList
+        .sort((a, b) => a.get('position') - b.get('position'))
+        .map((sideProject) => (
+          <Link to={sideProject.get('url')}>
+            <SimpleCard category={sideProject} />
+          </Link>
+        ))
+      }
+    </div>
+  );
+}
 
 export default Home;

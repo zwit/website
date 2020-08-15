@@ -15,19 +15,20 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const Science = () => {
+const Art = () => {
   const classes = useStyles();
-
+  
   return (
     <div>
       <Link to="/"><Button variant="contained" className={classes.homeButton}>Home</Button></Link>
-      <h1 className={classes.title}>Science</h1>
+      <h1 className={classes.title}>Art</h1>
       <TimeLineComponent 
-        type={'science'}
+        type={'art'}
         displaySlider={false}
       />
     </div>
   )
 }
 
-export default Science;
+
+export default Art;
