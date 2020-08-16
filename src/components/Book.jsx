@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import EntityWithTextComponent from '../common/EntityWithTextComponent';
+import EntityWithTextComponent from './common/EntityWithTextComponent';
 
 const useStyles = makeStyles((theme) => ({
   homeButton: {

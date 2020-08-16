@@ -6,13 +6,15 @@ import backgroundMedieval from './images/background-medieval.png';
 
 import { BrowserRouter, Route, Switch } from 'react-router-dom';
 
-import History from './components/history';
-import Home from './components/home';
+import History from './components/History';
+import Home from './components/Home';
 import Lang from './components/lang';
-import Science from './components/science';
+import Science from './components/Science';
 import Crypto from './components/crypto';
-import Book from './components/book';
-import Art from './components/art';
+import Book from './components/Book';
+import Art from './components/Art';
+import Stats from './components/Stats';
+import Ml from './components/Ml';
 
 class App extends React.Component {
   constructor(props) {
@@ -106,6 +108,8 @@ class App extends React.Component {
             <Route path='/crypto' component={Crypto} />
             <Route path='/book' component={Book} />
             <Route path='/art' component={Art} />
+            <Route path='/stats' component={Stats} />
+            <Route path='/ml' component={Ml} />
           </Switch>
         </BrowserRouter>
       </Content>

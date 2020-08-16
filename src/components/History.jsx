@@ -1,5 +1,5 @@
 import React from 'react';
-import TimeLineComponent from '../common/TimeLineComponent';
+import TimeLineComponent from './common/TimeLineComponent';
 import { Link } from 'react-router-dom';
 import { Button } from '@material-ui/core';
 import styled from 'styled-components';

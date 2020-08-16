@@ -50,12 +50,14 @@ const SimpleCard = ({category, onClick, onDelete, onSave, className, isEditingPr
                 id="standard-basic" 
                 className={classes.displayBlock}
                 label="Title" 
+                fullWidth
                 value={newEntity.get('title')}
                 onChange={(event) => setNewEntity(newEntity.set('title', event.target.value))}
               />
               <TextField 
                 id="standard-basic"
-                label="Description" 
+                label="Description"
+                fullWidth
                 className={classes.displayBlock}
                 value={newEntity.get('description')}
                 onChange={(event) => setNewEntity(newEntity.set('description', event.target.value))}

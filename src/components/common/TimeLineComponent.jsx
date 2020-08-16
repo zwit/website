@@ -164,6 +164,7 @@ class TimeLineComponent extends React.Component {
 
     this.setState({
       dateList: newDateList,
+      selectedDate: selectedDate.set(field, value),
     })
 
     this.debouncedPostDate(newDateList.get(dateListIndex));

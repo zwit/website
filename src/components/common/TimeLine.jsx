@@ -17,6 +17,7 @@ class TimeLine extends React.Component {
       activityList: List(),
       timeLineCenterX: 0,
       displayEdition: false,
+      lineHeight: 50,
     }
 
     this.toggleSelected = this.toggleSelected.bind(this);
@@ -28,6 +29,8 @@ class TimeLine extends React.Component {
     this.orderDateList = this.orderDateList.bind(this);
     this.getPosByDate = this.getPosByDate.bind(this);
     this.getWidthByDate = this.getWidthByDate.bind(this);
+    this.getMarginTop = this.getMarginTop.bind(this);
+    this.hasSameDates = this.hasSameDates.bind(this);
   }
 
   getZoom(dateList, timeLineSpan) {
@@ -35,12 +38,12 @@ class TimeLine extends React.Component {
       this.getDateSpan(curr) < this.getDateSpan(prev) ? curr : prev
     ));
 
-    return smallestSpan / timeLineSpan * 10;
+    return smallestSpan / timeLineSpan * 5;
   }
 
   orderDateList(dateList) {
     return dateList
-      .map((date) => date.set('date', this.getTrueDate(date.get('date'), date.get('isDateBC'))))
+      .map((date) => date.set('date', this.getStartDate(date)))
       .sort(function(a,b) {
         return a.get('date').year() - b.get('date').year();
       })
@@ -61,8 +64,8 @@ class TimeLine extends React.Component {
 
   getDateSpan(date) {
     return this.getDiffDates(
-      this.getTrueDate(date.get('endDate'), date.get('isEndDateBC')), 
-      this.getTrueDate(date.get('date'), date.get('isDateBC'))
+      this.getEndDate(date),
+      this.getStartDate(date)
     );
   }
 
@@ -79,10 +82,11 @@ class TimeLine extends React.Component {
   }
 
   hasSameDates(date, dateToCompare) {
-    return this.getDiffDates(
-      this.getTrueDate(date.get('date'), date.get('isDateBC')),
-      this.getTrueDate(dateToCompare.get('endDate'), dateToCompare.get('isEndDateBC'))
-    ) === 0;
+    const { dateList } = this.props;
+    const yearStart = this.getStartDate(date).year();
+    return dateList.filter(date => 
+      yearStart === 
+      this.getEndDate(date).year()).size > 0;
   }
 
   componentDidMount() {
@@ -96,13 +100,43 @@ class TimeLine extends React.Component {
     this.setState({ timeLineSpan });
   }
 
+  getEndDate(date) {
+    return this.getTrueDate(date.get('endDate'), date.get('isEndDateBC'));
+  }
+
+  getStartDate(date) {
+    return this.getTrueDate(date.get('date'), date.get('isDateBC'));
+  }
+
+  areDatesOverlapping(date, dateToCompare) {
+    return this.getEndDate(date).isAfter(this.getStartDate(dateToCompare)) && this.getStartDate(date).isBefore(this.getStartDate(dateToCompare)) ||
+    this.getEndDate(dateToCompare).isAfter(this.getStartDate(date)) && this.getStartDate(dateToCompare).isBefore(this.getStartDate(date));
+  }
+
+  getNumberDatesOverlapping(dateCurr, dateList) {
+    return dateList
+      .filter(date => date.get('id') !== dateCurr.get('id'))
+      .filter(date => this.areDatesOverlapping(date, dateCurr))
+      .size
+    ;
+  }
+
+  getLineHeight(dateList) {
+    const lineHeight =  50 + 50 * dateList.reduce((maxNbOverlap, date) => {
+      return this.getNumberDatesOverlapping(date, dateList) > maxNbOverlap;
+    });
+
+    return lineHeight;
+  }
+
   componentDidUpdate() {
     const { dateList } = this.props;
     const { selectedDate, timeLineSpan } = this.state;
 
     if (dateList.size && (!selectedDate || !dateList.filter((date) => date.get('id') === selectedDate.get('id')).size)) {
       this.setState(() => ({ 
-        zoom: this.getZoom(dateList, timeLineSpan)
+        zoom: this.getZoom(dateList, timeLineSpan),
+        lineHeight: this.getLineHeight(dateList),
       }), () => {
         this.toggleSelected(dateList.get(0));
       })
@@ -125,6 +159,13 @@ class TimeLine extends React.Component {
     })
   }
 
+  getMarginTop(date) {
+    const { lineHeight } = this.state;
+    const { dateList } = this.props;
+
+    return lineHeight > 50 ? -lineHeight - 2 + ((this.getNumberDatesOverlapping(date, dateList)-1) * 50) : -lineHeight - 2;
+  }
+
   toggleSelected(selectedDate) {
     const { timeLineSpan } = this.state;
     const { setSelectedDate } = this.props;
@@ -145,7 +186,7 @@ class TimeLine extends React.Component {
   }
 
   toggleTo(operation) {
-    const { selectedDate } = this.state;
+    const { selectedDate, timeLineSpan } = this.state;
     const { dateList } = this.props;
 
     const orderedList = this.orderDateList(dateList);
@@ -155,6 +196,24 @@ class TimeLine extends React.Component {
     let newIndex = index === 0 ? dateList.size - 1 : index - 1;
     if (operation === 'next') {
       newIndex = index >= dateList.size -1 ? 0 : index + 1;
+    }
+
+    const date = orderedList.get(newIndex);
+    const dateSpan = this.getWidthByDate(date);
+
+    const isDateSpanWiderThanTimeLine = dateSpan > timeLineSpan;
+    if (isDateSpanWiderThanTimeLine) {
+      return this.setState(() => ({
+        zoom: this.getZoom(List([date]), timeLineSpan * 3),
+      }), () => {
+        this.toggleSelected(date);
+      });
+    } else if (dateSpan / timeLineSpan < 0.2) {
+      return this.setState(() => ({
+        zoom: this.getZoom(dateList, timeLineSpan),
+      }), () => {
+        this.toggleSelected(date);
+      });
     }
 
     return this.toggleSelected(orderedList.get(newIndex));
@@ -169,8 +228,8 @@ class TimeLine extends React.Component {
   }
 
   render() {
-    const { selectedDate, timeLineCenterX } = this.state;
-    const { lineHeight, pointSize, classes, dateList } = this.props;
+    const { selectedDate, timeLineCenterX, lineHeight } = this.state;
+    const { pointSize, classes, dateList } = this.props;
 
     return (
       <div>
@@ -210,8 +269,8 @@ class TimeLine extends React.Component {
                       color: date.get('color'),
                       position: 'absolute',
                       display: 'block',
-                      height: lineHeight,
-                      marginTop: -lineHeight - 2,
+                      height: 50,
+                      marginTop: this.getMarginTop(date),
                       cursor: 'pointer',
                       transition: '0.5s all ease',
                     }}
@@ -219,10 +278,10 @@ class TimeLine extends React.Component {
                   >
                     {!this.hasSameDates(date, dateList.get(index - 1)) && 
                       <RangeDateStart>
-                        {this.getTrueDate(date.get('date'), date.get('isDateBC')).year()}
+                        {this.getStartDate(date).year()}
                       </RangeDateStart>
                     }
-                    <RangeDateEnd>{this.getTrueDate(date.get('endDate'), date.get('isEndDateBC')).year()}</RangeDateEnd>
+                    <RangeDateEnd>{this.getEndDate(date).year()}</RangeDateEnd>
                     <RangeText><RangeTextInner>{date.get('innerText')}</RangeTextInner></RangeText>
                   </RangeElement>
                 </>
@@ -365,15 +424,17 @@ const MoveButton = styled.div`
 const RangeDateStart = styled.div`
   position: absolute;
   top: -50px;
-  left: -18px;
+  left: -12px;
+  font-size: 12px;
   z-index: 10;
   color: black;
 `;
 
 const RangeDateEnd = styled.div`
   position: absolute;
+  font-size: 12px;
   top: -50px;
-  right: -18px;
+  right: -12px;
   color: black;
 `;
 

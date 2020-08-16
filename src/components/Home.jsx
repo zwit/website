@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Map, List } from 'immutable';
-import SimpleCard from '../common/SimpleCard';
+import SimpleCard from './common/SimpleCard';
 import Avatar from '@material-ui/core/Avatar';
 import { makeStyles } from '@material-ui/core/styles';
 import { deepOrange, deepPurple } from '@material-ui/core/colors';
 import { Link } from 'react-router-dom';
-import matrix from '../../images/matrix.png';
-import tintin from '../../images/tintin.png';
-import eratosthene from '../../images/eratosthene.png';
-import interstellarBooks from '../../images/interstellar-books.png';
-import yellowSubmarine from '../../images/yellow-submarine.png';
-import oss117 from '../../images/oss117.png';
-import ai from '../../images/ai.png';
-import stats from '../../images/stats.png';
+import matrix from '../images/matrix.png';
+import tintin from '../images/tintin.png';
+import eratosthene from '../images/eratosthene.png';
+import interstellarBooks from '../images/interstellar-books.png';
+import yellowSubmarine from '../images/yellow-submarine.png';
+import oss117 from '../images/oss117.png';
+import ai from '../images/ai.png';
+import stats from '../images/stats.png';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -69,7 +69,7 @@ const Home = () => {
     description: 'Stats charts',
     position: 6,
   }), Map({
-    url: '/ai',
+    url: '/ml',
     title: 'ML projects',
     image: ai,
     description: 'ML test',
@@ -81,6 +81,13 @@ const Home = () => {
     description: 'Crypto desc',
     position: 8,
   })]));
+
+  const config =  {
+    spotify: {
+      client_id: 'YOUR_CLIENT_ID',
+      client_secret: 'YOUR_CLIENT_SECRET'
+    }
+  }
 
   useEffect(() => {
     // fetch('/api/activity')
