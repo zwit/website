@@ -1,95 +1,89 @@
 import React, { useState } from 'react';
-import cx from 'classnames';
 import { makeStyles } from '@material-ui/core/styles';
-import { CardActionArea, Card, CardMedia, CardActions, Typography, CardContent, Button, TextField } from '@material-ui/core';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import { TextField } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import TranslateIcon from '@material-ui/icons/Translate';
 
 const useStyles = makeStyles({
   root: {
+    minWidth: 275,
+    maxWidth: 300,
+  },
+  bullet: {
     display: 'inline-block',
-    marginLeft: '20px',
-    marginTop: '20px',
-    width: '300px',
+    margin: '0 2px',
+    transform: 'scale(0.8)',
   },
-  media: {
-    height: 140,
+  translate: {
+    paddingBottom: 10,
+    float: 'right',
   },
-  actionArea: {
-    minHeight: 100,
+  title: {
+    fontSize: 14,
   },
-  displayBlock: {
-    display: 'block',
-  }
+  text: {
+    paddingBottom: 10,
+  },
+  pos: {
+    marginBottom: 12,
+  },
 });
 
-const SimpleCard = ({category, onClick, onDelete, onSave, className, isEditingProp = false}) => {
+export default function SimpleCard({character, isEditing, setCharacter, deleteCharacter}) {
   const classes = useStyles();
-  const [newEntity, setNewEntity] = useState(category);
-  const [isEditing, toggleEditing] = useState(isEditingProp);
+  const [displayTranslation, toggleTranslation] = useState(false);
+  const bull = <span className={classes.bullet}>•</span>;
 
   return (
-    <>
-      <Card className={cx(classes.root, className)}>
-        <CardActionArea onClick={onClick}>
-          <CardMedia
-            className={classes.media}
-            image={category.get('image')}
-            title={category.get('title')}
+    <Card className={classes.root}>
+      <CardContent>
+        {character.get('id')}
+        <Typography className={classes.title} color="textSecondary" gutterBottom>
+          {!isEditing && character.get('language') && character.get('language').name}
+          {isEditing && character.get('language') && <TextField
+            label="lang name" 
+            value={character.get('language').name} 
+            //onChange={(event) => setCharacter(character.set('language', event.target.value))} 
+          />}
+        </Typography>
+        <Typography variant="h5" component="span" className={classes.text}>
+          {!isEditing && character.get('text')}
+          {isEditing && <TextField
+            label="text" 
+            value={character.get('text')} 
+            onChange={(event) => setCharacter(character.set('text', event.target.value))} 
+          />}
+        </Typography>
+        {!isEditing && <Button size="small" className={classes.translate} onClick={() => toggleTranslation(!displayTranslation)}><TranslateIcon/></Button>}
+        {!isEditing && displayTranslation && <Typography className={classes.pos} color="textSecondary">
+          {character.get('description')}
+        </Typography>}
+        {isEditing && <Typography className={classes.pos} color="textSecondary">
+          <TextField
+            label="description" 
+            value={character.get('description')} 
+            onChange={(event) => setCharacter(character.set('description', event.target.value))} 
           />
-          <CardContent className={classes.actionArea}>
-            {!isEditing && <>
-              <Typography gutterBottom variant="h5" component="h2">
-                {category.get('title')}
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="p">
-                {category.get('description')}
-              </Typography>
-            </>}
-
-            {isEditing && <>
-              <TextField 
-                id="standard-basic" 
-                className={classes.displayBlock}
-                label="Title" 
-                fullWidth
-                value={newEntity.get('title')}
-                onChange={(event) => setNewEntity(newEntity.set('title', event.target.value))}
-              />
-              <TextField 
-                id="standard-basic"
-                label="Description"
-                fullWidth
-                className={classes.displayBlock}
-                value={newEntity.get('description')}
-                onChange={(event) => setNewEntity(newEntity.set('description', event.target.value))}
-              />
-            </>}
-          </CardContent>
-        </CardActionArea>
-        <CardActions>
-          {!isEditing && 
-            <>
-              <Button size="small" color="primary" onClick={() => toggleEditing(!isEditing)}>
-                Edit
-              </Button>
-              <Button size="small" color="primary" onClick={onDelete}>
-                Delete
-              </Button>
-            </>
-          }
-          {isEditing && 
-            <>
-              <Button onClick={() => onSave(newEntity)} size="small" color="primary">
-                Save
-              </Button>
-              <Button onClick={() => toggleEditing(!isEditing)} size="small" color="primary">
-                Cancel
-              </Button>
-            </>
-          }
-        </CardActions>
-      </Card>
-    </>
-  )
+        </Typography>}
+        {!isEditing && displayTranslation && <Typography className={classes.pos} color="textSecondary">
+          {character.get('translation')}
+        </Typography>}
+        {isEditing && <Typography className={classes.pos} color="textSecondary">
+          <TextField
+            label="translation" 
+            value={character.get('translation')} 
+            onChange={(event) => setCharacter(character.set('translation', event.target.value))} 
+          />
+        </Typography>}
+      </CardContent>
+      <CardActions>
+        {isEditing && <DeleteIcon onClick={() => deleteCharacter(character)} />}
+      </CardActions>
+    </Card>
+  );
 }
-
-export default SimpleCard;

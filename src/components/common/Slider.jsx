@@ -3,7 +3,7 @@ import cx from 'classnames';
 import PropTypes from 'prop-types';
 import { Map } from 'immutable';
 import backgroundMedieval from '../../images/background-medieval.png';
-import SimpleCard from './SimpleCard';
+import MediaCard from './MediaCard';
 import { makeStyles } from '@material-ui/core/styles';
 import { animated, useSpring } from "react-spring";
 import { useScroll } from "react-use-gesture";
@@ -30,17 +30,20 @@ const Slider = ({ deleteEntity, entityList, postEntity, selectEntity, selectedEn
         {entityList && entityList.map((entity) => (
           <animated.div style={{
             ...style,
-          }}><SimpleCard
-            className={cx(classes.card, {
-            'selected': selectedEntity && selectedEntity.get('id') === entity.get('id'),
-            })}
-            onClick={() => selectEntity(entity)}
-            onDelete={deleteEntity}
-            category={entity.set('image', backgroundMedieval)}
-          /></animated.div>
+          }}>
+            <MediaCard
+              className={cx(classes.card, {
+              'selected': selectedEntity && selectedEntity.get('id') === entity.get('id'),
+              })}
+              onClick={() => selectEntity(entity)}
+              onDelete={() => deleteEntity(entity)}
+              onSave={postEntity}
+              category={entity.get('image') ? entity : entity.set('image', backgroundMedieval)}
+            />
+          </animated.div>
         ))}
 
-        <SimpleCard
+        <MediaCard
           className={classes.card}
           onSave={postEntity}
           isEditingProp={true}

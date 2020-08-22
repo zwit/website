@@ -7,13 +7,14 @@ import {
   AsyncStorage
 } from 'react-native';
 import invariant from 'invariant';
+import promisify from './promisify'
+import defaultProviders from './authProviders';
 
 const OAuthManagerBridge = NativeModules.OAuthManager;
 
 let configured = false;
 const STORAGE_KEY = 'ReactNativeOAuth';
-import promisify from './promisify'
-import defaultProviders from './authProviders';
+
 
 let authProviders = defaultProviders;
 

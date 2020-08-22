@@ -19,6 +19,7 @@ class EntityWithTextComponent extends React.Component {
     }
 
     this.fetchEntity = this.fetchEntity.bind(this);
+    this.postEntity = this.postEntity.bind(this);
     this.debouncedPostEntity = debounce(
       this.postEntity.bind(this),
       500
@@ -89,14 +90,15 @@ class EntityWithTextComponent extends React.Component {
     const { entityList, selectedEntity } = this.state;
 
     const entityListIndex = entityList.findIndex(date => date.get('id') === selectedEntity.get('id'));
-
     const newEntityList = entityList.setIn([entityListIndex, field], value);
+    const newSelectedEntity = newEntityList.get(entityListIndex);
 
     this.setState({
       entityList: newEntityList,
+      selectedEntity: newSelectedEntity,
     })
 
-    this.debouncedPostEntity(newEntityList.get(entityListIndex));
+    this.debouncedPostEntity(newSelectedEntity);
   }
 
   toggleDisplayEdition() {

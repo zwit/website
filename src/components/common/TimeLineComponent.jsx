@@ -15,6 +15,7 @@ import 'react-infinite-calendar/styles.css'; // Make sure to import the default 
 import TimeLine from './TimeLine';
 import Slider from './Slider';
 import TextEditor from './TextEditor';
+import YearSelector from './YearSelector';
 
 class TimeLineComponent extends React.Component {
   constructor(props) {
@@ -110,6 +111,12 @@ class TimeLineComponent extends React.Component {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(date)
+    })
+    .then(res => res.json())
+    .then((newDate) => {
+      this.fetchDates().then(() => {
+        this.setSelectedDate(Map(newDate))
+      });
     });
   }
 
@@ -156,6 +163,7 @@ class TimeLineComponent extends React.Component {
   }
 
   setEvent(field, value) {
+    debugger;
     const { dateList, selectedDate } = this.state;
 
     const dateListIndex = dateList.findIndex(date => date.get('id') === selectedDate.get('id'));
@@ -184,6 +192,10 @@ class TimeLineComponent extends React.Component {
     });
   }
 
+  formatYear(year) {
+    return moment(year.toString().padStart(4, '0'), 'YYYY').format("YYYY-MM-DD HH:mm:ss");
+  }
+
   render() {
     const { selectedDate, dateList, displayEdition, activityList, selectedActivity } = this.state;
     const { displaySlider } = this.props;
@@ -195,22 +207,6 @@ class TimeLineComponent extends React.Component {
     }
     return (
       <>
-        {/* {activityList.size && <Slider>
-          {activityList.map((activity, index) => (
-            <Slider.Item 
-              displayEdition={displayEdition} 
-              isSelected={selectedActivity === activity.get('id')} 
-              onClick={() => this.selectActivity(activity.get('id'))}
-              onEditTitle={(event) => this.setActivityList([index, 'title'], event.target.value)}
-              onEditDescription={(event) => this.setActivityList([index, 'description'], event.target.value)}
-              onDelete={() => this.deleteActivity(activity)}
-              activity={activity}
-              key={activity.get('id')}>
-                item1
-            </Slider.Item>
-          ))}
-        </Slider>} */}
-
         {displaySlider && <Slider
           entityList={activityList}
           selectEntity={this.selectActivity}
@@ -232,7 +228,7 @@ class TimeLineComponent extends React.Component {
         {displayEdition && <Button 
           variant="contained" 
           onClick={() => {this.postDate({
-            type: 'range', innerText: 'event', text: '<p>text</p>', color: 'white', activity: { id: selectedActivity.get('id')}, background: 'repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px)', date: moment().format("YYYY-MM-DD HH:mm:ss"), endDate: moment().add(1, 'year').format("YYYY-MM-DD HH:mm:ss")
+            type: 'range', innerText: '', text: '<p></p>', color: 'white', activity: { id: selectedActivity.get('id')}, background: 'repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px)', date: moment().format("YYYY-MM-DD HH:mm:ss"), endDate: moment().add(1, 'year').format("YYYY-MM-DD HH:mm:ss")
           })}}
         >
           Add Event
@@ -281,21 +277,10 @@ class TimeLineComponent extends React.Component {
                       control={<Checkbox checked={selectedDate.get('isDateBC')} onChange={(event) => this.setEvent('isDateBC', event.target.checked)} name="checkedA" />}
                       label="isDateBC"
                     />
-                    <InfiniteCalendar
-                      width={250}
-                      height={200}
-                      selected={new Date(selectedDate.get('date'))}
-                      min={new Date(-1, 0, 1)}
-                      minDate={new Date(-1, 0, 1)}
-                      max={new Date(5001, 0, 1)}
-                      maxDate={new Date(5001, 0, 1)}
-                      display='years'
-                      displayOptions={{
-                        showMonthsForYears: false,
-                        showWeekdays: false,
-                        showOverlay: false,
-                      }}
-                      onSelect={(date) => this.setEvent('date', moment(date).format("YYYY-MM-DD HH:mm:ss"))}
+                    <YearSelector
+                      defaultValue={moment(selectedDate.get('date')).year()}
+                      onSelect={(date) => this.setEvent('date', this.formatYear(date))}
+                      options={[...Array(5001).keys()].map(year => ({value: year, label: year}))}
                     />
                   </CalendarContainer>
                   {selectedDate.get('type') === 'range' && 
@@ -304,21 +289,10 @@ class TimeLineComponent extends React.Component {
                       control={<Checkbox checked={selectedDate.get('isEndDateBC')} onChange={(event) => this.setEvent('isEndDateBC', event.target.checked)} name="checkedA" />}
                       label="isDateBC"
                     />
-                      <InfiniteCalendar
-                        width={250}
-                        height={200}
-                        min={new Date(-1, 0, 1)}
-                        minDate={new Date(-1, 0, 1)}
-                        max={new Date(5001, 0, 1)}
-                        maxDate={new Date(5001, 0, 1)}
-                        selected={new Date(selectedDate.get('endDate'))}
-                        display='years'
-                        displayOptions={{
-                          showMonthsForYears: false,
-                          showWeekdays: false,
-                          showOverlay: false,
-                        }}
-                        onSelect={(date) => this.setEvent('endDate', moment(date).format("YYYY-MM-DD HH:mm:ss"))}
+                      <YearSelector
+                        defaultValue={moment(selectedDate.get('endDate')).year()}
+                        onSelect={(date) => this.setEvent('endDate', this.formatYear(date))}
+                        options={[...Array(5001).keys()].map(year => ({value: year, label: year}))}
                       />
                     </CalendarContainer>
                   }

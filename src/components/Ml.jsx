@@ -2,13 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
+import Header from './common/Header';
 
 const useStyles = makeStyles((theme) => ({
-  homeButton: {
-    a: {
-      textDecoration: 'none',
-    },
-  },
   title: {
     textAlign: 'center',
   }
@@ -19,7 +15,7 @@ const Ml = () => {
   
   return (
     <div>
-      <Link to="/"><Button variant="contained" className={classes.homeButton}>Home</Button></Link>
+      <Header/>
       <h1 className={classes.title}>Machine learning</h1>
 
     </div>

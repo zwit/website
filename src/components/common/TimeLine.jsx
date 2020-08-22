@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import PropTypes from 'prop-types';
-import Circle from '../forms/Circle';
+import Circle from './Circle';
 import moment from 'moment';
 import 'react-quill/dist/quill.snow.css';
 import { withStyles } from "@material-ui/core/styles";
@@ -129,18 +129,28 @@ class TimeLine extends React.Component {
     return lineHeight;
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const { dateList } = this.props;
     const { selectedDate, timeLineSpan } = this.state;
 
-    if (dateList.size && (!selectedDate || !dateList.filter((date) => date.get('id') === selectedDate.get('id')).size)) {
-      this.setState(() => ({ 
-        zoom: this.getZoom(dateList, timeLineSpan),
-        lineHeight: this.getLineHeight(dateList),
-      }), () => {
-        this.toggleSelected(dateList.get(0));
-      })
+    const isSelectedDateNotFound = dateList.size && (!selectedDate || !dateList.filter((date) => date.get('id') === selectedDate.get('id')).size);
+    const hasDateListAndSelectedDate = dateList.size && prevProps.dateList.size && selectedDate;
+    const currentSelectedDate = hasDateListAndSelectedDate && dateList.find((date) => date.get('id') === selectedDate.get('id'));
+    const prevSelectedDate = hasDateListAndSelectedDate && prevProps.dateList.find((date) => date.get('id') === selectedDate.get('id'));
+    const hasEndDateChanged = currentSelectedDate && currentSelectedDate && currentSelectedDate.get('endDate') !== prevSelectedDate.get('endDate');
+    const hasStartDateChanged = currentSelectedDate && currentSelectedDate && currentSelectedDate.get('date') !== prevSelectedDate.get('date');
+
+    if (dateList.size) {
+      if (isSelectedDateNotFound || hasEndDateChanged || hasStartDateChanged) {
+        this.setState(() => ({ 
+          zoom: this.getZoom(dateList, timeLineSpan),
+          lineHeight: this.getLineHeight(dateList),
+        }), () => {
+          this.toggleTo(dateList.get(0));
+        })
+      }
     }
+    
   }
 
   dragLine(event) {
@@ -189,16 +199,22 @@ class TimeLine extends React.Component {
     const { selectedDate, timeLineSpan } = this.state;
     const { dateList } = this.props;
 
-    const orderedList = this.orderDateList(dateList);
+    let date = null;
+    if (typeof operation === 'string') {
+      const orderedList = this.orderDateList(dateList);
 
-    const index = orderedList.findIndex(date => date.get('id') === selectedDate.get('id'));
+      const index = orderedList.findIndex(date => date.get('id') === selectedDate.get('id'));
 
-    let newIndex = index === 0 ? dateList.size - 1 : index - 1;
-    if (operation === 'next') {
-      newIndex = index >= dateList.size -1 ? 0 : index + 1;
+      let newIndex = index === 0 ? dateList.size - 1 : index - 1;
+      if (operation === 'next') {
+        newIndex = index >= dateList.size -1 ? 0 : index + 1;
+      }
+
+      date = orderedList.get(newIndex);
+    } else {
+      date = operation;
     }
-
-    const date = orderedList.get(newIndex);
+    
     const dateSpan = this.getWidthByDate(date);
 
     const isDateSpanWiderThanTimeLine = dateSpan > timeLineSpan;
@@ -216,7 +232,7 @@ class TimeLine extends React.Component {
       });
     }
 
-    return this.toggleSelected(orderedList.get(newIndex));
+    return this.toggleSelected(date);
   }
 
   onKeyup(event) {
@@ -254,7 +270,7 @@ class TimeLine extends React.Component {
                     zIndex: 10,
                   }}
                   selected={selectedDate && selectedDate.get('id') === date.get('id')}
-                  onSelected={() => this.toggleSelected(date)}
+                  onSelected={() => this.toggleTo(date)}
                 />
               )}
 
@@ -274,7 +290,7 @@ class TimeLine extends React.Component {
                       cursor: 'pointer',
                       transition: '0.5s all ease',
                     }}
-                    onClick={() => this.toggleSelected(date)}
+                    onClick={() => this.toggleTo(date)}
                   >
                     {!this.hasSameDates(date, dateList.get(index - 1)) && 
                       <RangeDateStart>

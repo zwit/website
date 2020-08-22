@@ -12,7 +12,7 @@ const TextEditor = ({ onChangeText, text }) => (
       onChange={onChangeText}
       modules={{
         toolbar: [
-          [{ 'header': '1'}, {'header': '2'}, { 'font': [] }],
+          [{ 'header': '1'}, {'header': '2'}, {'header': '3'}, { 'font': [] }],
           [{ 'align': [] }],
           [{size: []}],
           ['bold', 'italic', 'underline', 'strike', 'blockquote',  { 'color': [] }, { 'background': [] }],

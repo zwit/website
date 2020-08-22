@@ -1,14 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { CardActionArea, Card, CardMedia, Typography, CardContent, TextField, FormControlLabel, Switch, Button, ButtonGroup } from '@material-ui/core';
+import { TextField, FormControlLabel, Switch, Button, ButtonGroup } from '@material-ui/core';
 import styled from 'styled-components';
 import backgroundMedieval from '../../images/background-medieval.png';
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
-import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
-import Slider from './netflixSlider';
 import { Map, List } from 'immutable';
 import { makeStyles } from '@material-ui/core/styles';
-import SimpleCard from './SimpleCard';
+import SimpleCard from '../common/SimpleCard';
+import Slider from '../common/Slider';
 import debounce from 'debounce';
 // Detect free variables `exports`.
 var freeExports = typeof exports == 'object' && exports;
@@ -330,6 +328,10 @@ export default class LangList extends React.Component {
     this.scriptIdeo = this.scriptIdeo.bind(this);
     this.scriptAll = this.scriptAll.bind(this);
     this.scriptWord = this.scriptWord.bind(this);
+    this.selectLanguage = this.selectLanguage.bind(this);
+    this.postLanguage = this.postLanguage.bind(this);
+    this.deleteLanguage = this.deleteLanguage.bind(this);
+    this.fetchLanguage = this.fetchLanguage.bind(this);
 
     this.debouncedPostIdeogram = debounce(
       this.postIdeogram.bind(this),
@@ -337,13 +339,14 @@ export default class LangList extends React.Component {
     );
 
     this.state = {
-      languageList: ['Chinese', 'Japanese', 'Russian', 'Italian', 'Arabic', 'Turkish'],
+      languageList: List(),
       ideogramList: List(),
       wordList: List(),
       displayEdition: false,
       randomIndex: null,
       searched: '',
       count: 0,
+      selectedLanguage: null,
     }
 
     
@@ -352,6 +355,7 @@ export default class LangList extends React.Component {
   componentDidMount() {
     this.fetchIdeograms();
     this.fetchWords();
+    this.fetchLanguage();
 
     // fetch(`https://chinese.gratis/flashcards/ax_flashcard.php?HSK=ALL`, {
     //   method: 'POST',
@@ -582,6 +586,64 @@ formData.append('champs', 'all');
     });
   }
 
+  selectLanguage(selectedLanguage) {
+    this.setState({ 
+      selectedLanguage,
+    });
+  }
+
+  fetchLanguage() {
+    this.setState({ 
+      languageList: List([{
+        title: 'Chinese',
+        description: 'learn chinese',
+        image: backgroundMedieval
+      }, {
+        title: 'Japanese',
+        description: 'learn japanese',
+        image: backgroundMedieval
+      }, {
+        title: 'Russian',
+        description: 'learn russian',
+        image: backgroundMedieval
+      }, {
+        title: 'Italian',
+        description: 'learn italian',
+        image: backgroundMedieval
+      }, {
+        title: 'Arabic',
+        description: 'learn arabic',
+        image: backgroundMedieval
+      }, {
+        title: 'Turkish',
+        description: 'learn turkish',
+        image: backgroundMedieval
+      }]).map(language => Map(language)),
+    });
+  }
+
+  deleteLanguage(language) {
+    fetch(`/api/language/${language.get('id')}`, {
+      method: 'DELETE',
+      body: JSON.stringify({})
+    }).then(() => {
+      this.fetchLanguage();
+    });
+  }
+
+  postLanguage(language) {
+    fetch('/api/language', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(language)
+    }).then(() => {
+      this.fetchLanguage();
+    });
+  }
+
   render() {
     const {
       ideogramList,
@@ -590,6 +652,7 @@ formData.append('champs', 'all');
       randomIndex,
       searched,
       wordList,
+      selectedLanguage,
     } = this.state;
 
     let buttonList = List();
@@ -600,36 +663,14 @@ formData.append('champs', 'all');
 
     return (
       <div>
-        {/* <Slider>
-          {movies.map(movie => (
-            <Slider.Item movie={movie} key={movie.id}>item1</Slider.Item>
-          ))}
-        </Slider> */}
-        <Sliders>
-          <ArrowForwardIosIconStyled/>
-          <ArrowBackIosIconStyled/>
-          {languageList.map((language) => (
-            <StyledCard>
-              <CardActionArea>
-                <CardMedia
-                  component="img"
-                  alt="History"
-                  height="140"
-                  image={backgroundMedieval}
-                  title={"History"}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h5" component="h2">
-                    {language}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" component="p">
-                    {language} language
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </StyledCard>
-          ))}
-        </Sliders>
+        <Slider
+          entityList={languageList}
+          selectEntity={this.selectLanguage}
+          displayEdition={false}
+          deleteEntity={this.deleteLanguage}
+          postEntity={this.postLanguage}
+          selectedEntity={selectedLanguage}
+        />
 
         <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
           <Button>Ideogram</Button>
@@ -646,15 +687,6 @@ formData.append('champs', 'all');
           />}
           label="Editer"
         />
-
-        {/* {ideogramList.map((ideogram, index) => (
-          <SimpleCard
-            isEditing={displayEdition}
-            character={ideogram}
-            setCharacter={(character) => this.setCharacter(index, character)}
-            deleteCharacter={this.deleteIdeogram}
-          />
-        ))} */}
 
         <TextField
           label="searched" 
@@ -700,9 +732,6 @@ formData.append('champs', 'all');
         </Button>
          */}
 
-        
-
-        
         {displayEdition && <SimpleCard
           isEditing={true}
           character={Map({description: '', text: '', language: {name: 'Chinese'}})}
@@ -711,37 +740,10 @@ formData.append('champs', 'all');
 
         <div id="div"></div>
         <div id="ideo"></div>
-        
       </div>
     )
   }
 }
-
-const Sliders = styled.div`
-  overflow: hidden;
-  display: flex;
-  margin-left: 30px;
-  margin-right: 30px;
-`;
-
-const ArrowForwardIosIconStyled = styled(ArrowForwardIosIcon)`
-  right: 0;
-  position absolute;
-  transition: opacity .4s ease,transform .4s ease;
-  display: flex;
-`;
-
-const ArrowBackIosIconStyled = styled(ArrowBackIosIcon)`
-  left: 0;
-`;
-
-const StyledCard = styled(Card)`
-  margin-left: 20px;
-  margin-top: 20px;
-  min-width: 300px;
-
-  box-shadow: none !important;
-`;
 
 LangList.propTypes = {
 };
