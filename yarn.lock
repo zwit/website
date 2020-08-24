@@ -8342,10 +8342,10 @@ merge2@^1.2.3:
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.3.0.tgz#5b366ee83b2f1582c48f87e47cf1a9352103ca81"
   integrity sha512-2j4DAdlBOkiSZIsaXk4mTE3sRS02yBHAtfy127xRV3bQUFqXkjHCHLW6Scv7DwNRbIWNHH8zpnz9zMaKXIdvYw==
 
-metamask-logo@^2.3.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/metamask-logo/-/metamask-logo-2.3.1.tgz#62b656eac23f5809e80af539f8c52474f9af3680"
-  integrity sha512-1a78nwLsy05ybsmeXjcQ/WmtPkza7ywO7s3QLx6RH9ohMd4PC7+lQ55IPBKnJ5ST5HNbOzV4AnqkF4r9aBs+GA==
+metamask-logo@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/metamask-logo/-/metamask-logo-2.5.0.tgz#b745c07991cf14fa0858f2407da5e8544f699fd1"
+  integrity sha512-cOWjT0EnAtaOx7y+UDaguYuELG4YmDJ6+EfWqVBonlSuWJ31uZIvyZJ/Hh6lLRjVEKxXiQYKjIwL5h2lB7Ru2g==
   dependencies:
     gl-mat4 "1.1.4"
     gl-vec3 "1.0.3"
