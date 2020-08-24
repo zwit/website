@@ -35,7 +35,7 @@
     "react-select": "^3.1.0",
     "react-spring": "^8.0.27",
     "react-use-gesture": "^7.0.15",
-    "source-map-explorer": "^2.4.2",
+    "source-map-explorer": "^2.5.0",
     "styled-components": "^5.1.1",
     "web3": "^1.2.11"
   },
