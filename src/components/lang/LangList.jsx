@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { TextField, FormControlLabel, Switch, Button, ButtonGroup } from '@material-ui/core';
+import { TextField, FormControlLabel, Switch, Button, ButtonGroup, CircularProgress } from '@material-ui/core';
 import styled from 'styled-components';
 import backgroundMedieval from '../../images/background-medieval.png';
 import { Map, List } from 'immutable';
@@ -39,12 +39,11 @@ export default class LangList extends React.Component {
       searched: '',
       count: 0,
       selectedLanguage: null,
+      isLoading: true,
     }
   }
 
   componentDidMount() {
-    this.fetchIdeograms();
-    this.fetchWords();
     this.fetchLanguage();
   }
 
@@ -66,33 +65,37 @@ export default class LangList extends React.Component {
   }
 
   postIdeogram(ideogram) {
+    const { selectedLanguage } = this.state;
+
     fetch('/api/ideogram', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(ideogram)
+      body: JSON.stringify(ideogram.set('language', selectedLanguage))
     }).then(() => {
       this.fetchIdeograms();
     });
   }
 
   postWord(word) {
+    const { selectedLanguage } = this.state;
+
     fetch('/api/word', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(word)
+      body: JSON.stringify(word.set('language', selectedLanguage))
     }).then(() => {
       this.fetchWords();
     });
   }
 
-  fetchWords() {
-    return fetch('/api/word')
+  fetchWords(lang) {
+    return fetch(`/api/word?where={"language": "${lang.get('id')}"}`)
       .then(res => res.json())
       .then(wordList => {
         this.setState({ 
@@ -101,8 +104,8 @@ export default class LangList extends React.Component {
       });
   }
 
-  fetchIdeograms() {
-    return fetch('/api/ideogram')
+  fetchIdeograms(lang) {
+    return fetch(`/api/ideogram?where={"language": "${lang.get('id')}"}`)
       .then(res => res.json())
       .then(ideogramList => {
         this.setState({ 
@@ -134,39 +137,31 @@ export default class LangList extends React.Component {
     });
   }
 
-  selectLanguage(selectedLanguage) {
+  async selectLanguage(selectedLanguage) {
     this.setState({ 
       selectedLanguage,
+      isLoading: true,
+    });
+
+    await this.fetchIdeograms(selectedLanguage);
+    await this.fetchWords(selectedLanguage);
+
+    this.setState({
+      isLoading: false,
     });
   }
 
   fetchLanguage() {
-    this.setState({ 
-      languageList: List([{
-        title: 'Chinese',
-        description: 'learn chinese',
-        image: backgroundMedieval
-      }, {
-        title: 'Japanese',
-        description: 'learn japanese',
-        image: backgroundMedieval
-      }, {
-        title: 'Russian',
-        description: 'learn russian',
-        image: backgroundMedieval
-      }, {
-        title: 'Italian',
-        description: 'learn italian',
-        image: backgroundMedieval
-      }, {
-        title: 'Arabic',
-        description: 'learn arabic',
-        image: backgroundMedieval
-      }, {
-        title: 'Turkish',
-        description: 'learn turkish',
-        image: backgroundMedieval
-      }]).map(language => Map(language)),
+    return fetch('/api/language')
+      .then(res => res.json())
+      .then((languageList) => {
+        const newLanguageList = List(languageList.map(lang => Map(lang)));
+
+        this.setState({ 
+          languageList: newLanguageList,
+        });
+
+        this.selectLanguage(newLanguageList.get(0));
     });
   }
 
@@ -201,6 +196,7 @@ export default class LangList extends React.Component {
       searched,
       wordList,
       selectedLanguage,
+      isLoading,
     } = this.state;
 
     let buttonList = List();
@@ -214,7 +210,7 @@ export default class LangList extends React.Component {
       ideogramList.get(randomIndex);
 
     return (
-      <div>
+      <div style={{minHeight: '1000px'}}>
         <Slider
           entityList={languageList}
           selectEntity={this.selectLanguage}
@@ -273,11 +269,11 @@ export default class LangList extends React.Component {
 
         {displayEdition && <SimpleCard
           isEditing={true}
-          character={Map({description: '', text: '', language: {name: 'Chinese'}})}
+          character={Map({description: '', text: '', language: selectedLanguage})}
           setCharacter={this.setCharacter}
         />}
         </div>
-        <div style={{float: 'right', width: '74%'}}>
+        <div style={{float: 'right', width: '74%', height: '500px', overflow: 'scroll'}}>
         {itemSearched && wordList
           .filter(word => word.get('text')
             .match(itemSearched.get('text')) && word.get('text') !== itemSearched.get('text')
@@ -295,6 +291,11 @@ export default class LangList extends React.Component {
         </div>
         
         </div>
+
+        {isLoading && <div style={{textAlign: 'center'}}>
+            <CircularProgress />
+          </div>
+        }
 
         <div id="div"></div>
         <div id="ideo"></div>

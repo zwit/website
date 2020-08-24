@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import Header from './common/Header';
+import Content from './common/Content';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -15,9 +15,9 @@ const Ml = () => {
   
   return (
     <div>
-      <Header/>
-      <h1 className={classes.title}>Machine learning</h1>
-
+      <Content>
+        <h1 className={classes.title}>Machine learning</h1>
+      </Content>
     </div>
   )
 }

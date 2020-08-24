@@ -10,7 +10,7 @@ import { ResponsiveLine } from '@nivo/line';
 import moment from 'moment';
 import { TextField, Checkbox, Switch, FormControlLabel, CircularProgress, Button } from '@material-ui/core';
 import Slider from './common/Slider';
-import Header from './common/Header';
+import Content from './common/Content';
 import backgroundMedieval from '../images/background-medieval.png';
 import Wikipedia from '../images/wikipedia.png';
 import Spotify from '../images/spotify.png';
@@ -53,33 +53,34 @@ class Stats extends React.Component {
 
     return (
       <div>
-        <Header/>
-        <h1 className={classes.title}>Stats</h1>
+        <Content>
+          <h1 className={classes.title}>Stats</h1>
 
-        <Slider
-          entityList={List([
-            Map({id: 1, title: 'api.gouv.fr', description: '', image: apiGouvFr}),
-            Map({id: 3, title: 'wiki API', description: '', image: Wikipedia}),
-            Map({id: 4, title: 'spotify API', description: '', image: Spotify}),
-            Map({id: 5, title: 'OMDb API', description: '', image: OMDBAPI}),
-            Map({id: 2, title: 'sport API', description: '', image: backgroundMedieval}),
-            Map({id: 6, title: 'twitter API', description: '', image: backgroundMedieval}),
-            Map({id: 7, title: 'google API', description: '', image: backgroundMedieval}),
-            Map({id: 8, title: 'facebook API', description: '', image: backgroundMedieval}),
-            Map({id: 9, title: 'github API', description: '', image: backgroundMedieval}),
-            Map({id: 10, title: 'slack API', description: '', image: backgroundMedieval}),
-          ])}
-          selectEntity={this.selectAPI}
-          displayEdition={false}
-          deleteEntity={() => {}}
-          postEntity={() => {}}
-          selectedEntity={selectedAPI}
-        />
+          <Slider
+            entityList={List([
+              Map({id: 1, title: 'api.gouv.fr', description: '', image: apiGouvFr}),
+              Map({id: 3, title: 'wiki API', description: '', image: Wikipedia}),
+              Map({id: 4, title: 'spotify API', description: '', image: Spotify}),
+              Map({id: 5, title: 'OMDb API', description: '', image: OMDBAPI}),
+              Map({id: 2, title: 'sport API', description: '', image: backgroundMedieval}),
+              Map({id: 6, title: 'twitter API', description: '', image: backgroundMedieval}),
+              Map({id: 7, title: 'google API', description: '', image: backgroundMedieval}),
+              Map({id: 8, title: 'facebook API', description: '', image: backgroundMedieval}),
+              Map({id: 9, title: 'github API', description: '', image: backgroundMedieval}),
+              Map({id: 10, title: 'slack API', description: '', image: backgroundMedieval}),
+            ])}
+            selectEntity={this.selectAPI}
+            displayEdition={false}
+            deleteEntity={() => {}}
+            postEntity={() => {}}
+            selectedEntity={selectedAPI}
+          />
 
-        {selectedAPI && selectedAPI.get('id') === 1 && <APIgouvFr/>}
-        {selectedAPI && selectedAPI.get('id') === 3 && <APIwiki/>}
-        {selectedAPI && selectedAPI.get('id') === 5 && <APIomdb/>}
-        {selectedAPI && selectedAPI.get('id') === 4 && <APIspotify/>}
+          {selectedAPI && selectedAPI.get('id') === 1 && <APIgouvFr/>}
+          {selectedAPI && selectedAPI.get('id') === 3 && <APIwiki/>}
+          {selectedAPI && selectedAPI.get('id') === 5 && <APIomdb/>}
+          {selectedAPI && selectedAPI.get('id') === 4 && <APIspotify/>}
+        </Content>
       </div>
     );
   }

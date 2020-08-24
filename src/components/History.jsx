@@ -1,12 +1,12 @@
 import React from 'react';
 import TimeLineComponent from './common/TimeLineComponent';
-import Header from './common/Header';
+import Content from './common/Content';
 
 const History = () => (
   <div>
-    <Header/>
-
-    <TimeLineComponent type='history'/>
+    <Content>
+      <TimeLineComponent type='history'/>
+    </Content>
   </div>
 )
 

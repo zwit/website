@@ -1,7 +1,7 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import TimeLineComponent from './common/TimeLineComponent';
-import Header from './common/Header';
+import Content from './common/Content';
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -14,12 +14,13 @@ const Art = () => {
   
   return (
     <div>
-      <Header/>
-      <h1 className={classes.title}>Art</h1>
-      <TimeLineComponent 
-        type={'art'}
-        displaySlider={false}
-      />
+      <Content>
+        <h1 className={classes.title}>Art</h1>
+        <TimeLineComponent 
+          type={'art'}
+          displaySlider={false}
+        />
+      </Content>
     </div>
   )
 }

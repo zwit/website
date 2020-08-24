@@ -11,10 +11,12 @@ import TranslateIcon from '@material-ui/icons/Translate';
 import LinkIcon from '@material-ui/icons/Link';
 import { stringToColour } from './utils';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   root: {
     minWidth: 275,
     maxWidth: 300,
+    border: theme.mediaCard.actionArea,
+    backgroundColor: theme.backgroundColor,
   },
   bullet: {
     display: 'inline-block',
@@ -30,6 +32,7 @@ const useStyles = makeStyles({
   translate: {
     paddingBottom: 10,
     float: 'right',
+    color: theme.color,
   },
   title: {
     fontSize: 14,
@@ -39,8 +42,12 @@ const useStyles = makeStyles({
   },
   pos: {
     marginBottom: 12,
+    color: theme.mediaCard.secondaryTextColor,
   },
-});
+  number: {
+    color: theme.color,
+  }
+}));
 
 export default function SimpleCard({character, isEditing, setCharacter, deleteCharacter, onClickCaracter, opened = false, displayIndex = false}) {
   const classes = useStyles();
@@ -49,15 +56,7 @@ export default function SimpleCard({character, isEditing, setCharacter, deleteCh
 
   return (
     <Card className={classes.root}>
-      <CardContent>        
-        <Typography className={classes.title} color="textSecondary" gutterBottom>
-          {!isEditing && character.get('language') && character.get('language').name}
-          {isEditing && character.get('language') && <TextField
-            label="lang name" 
-            value={character.get('language').name} 
-            //onChange={(event) => setCharacter(character.set('language', event.target.value))} 
-          />}
-        </Typography>
+      <CardContent>
         <Typography variant="h5" component="span" className={classes.text}>
           {!isEditing && [...character.get('text')].map((c) => (
             <span className={classes.caracter} style={{color: stringToColour(c)}} onClick={() => onClickCaracter(c)}>{c}</span>
@@ -69,28 +68,28 @@ export default function SimpleCard({character, isEditing, setCharacter, deleteCh
           />}
         </Typography>
         {!isEditing && <Button size="small" className={classes.translate} onClick={() => toggleTranslation(!displayTranslation)}><TranslateIcon/></Button>}
-        <Button size="small" className={classes.translate}><a target="_blank" href={`https://translate.google.fr/?hl=fr#view=home&op=translate&sl=zh-CN&tl=fr&text=${character.get('text')}`}><LinkIcon/></a></Button>
-        {!isEditing && displayTranslation && <Typography className={classes.pos} color="textSecondary">
+        <Button size="small" className={classes.translate}><a target="_blank" alt="go to google translate" href={`https://translate.google.fr/?hl=fr#view=home&op=translate&sl=zh-CN&tl=fr&text=${character.get('text')}`}><LinkIcon/></a></Button>
+        {!isEditing && displayTranslation && <Typography className={classes.pos}>
           {character.get('description')}
         </Typography>}
-        {isEditing && <Typography className={classes.pos} color="textSecondary">
+        {isEditing && <Typography className={classes.pos}>
           <TextField
             label="description" 
             value={character.get('description')} 
             onChange={(event) => setCharacter(character.set('description', event.target.value))} 
           />
         </Typography>}
-        {!isEditing && displayTranslation && <Typography className={classes.pos} color="textSecondary">
+        {!isEditing && displayTranslation && <Typography className={classes.pos}>
           {character.get('translation')}
         </Typography>}
-        {isEditing && <Typography className={classes.pos} color="textSecondary">
+        {isEditing && <Typography className={classes.pos}>
           <TextField
             label="translation" 
             value={character.get('translation')} 
             onChange={(event) => setCharacter(character.set('translation', event.target.value))} 
           />
         </Typography>}
-        {displayTranslation && character.get('id')}
+        {displayTranslation && <span className={classes.number}>{character.get('id')}</span>}
       </CardContent>
       <CardActions>
         {isEditing && <DeleteIcon onClick={() => deleteCharacter(character)} />}

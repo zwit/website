@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Map, List } from 'immutable';
 import MediaCard from './common/MediaCard';
-import Avatar from '@material-ui/core/Avatar';
 import { makeStyles } from '@material-ui/core/styles';
-import { deepOrange, deepPurple } from '@material-ui/core/colors';
+import { deepOrange } from '@material-ui/core/colors';
 import { Link } from 'react-router-dom';
 import matrix from '../images/matrix.png';
 import tintin from '../images/tintin.png';
@@ -13,8 +12,7 @@ import yellowSubmarine from '../images/yellow-submarine.png';
 import oss117 from '../images/oss117.png';
 import ai from '../images/ai.png';
 import stats from '../images/stats.png';
-import YearSelector from './common/YearSelector';
-import moment from 'moment';
+import Content from './common/Content';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -105,9 +103,7 @@ const Home = () => {
   })
 
   return (
-    <div className={classes.root}>
-      <div className={classes.header}><Avatar className={classes.avatar}>J</Avatar></div>
-
+    <Content>
       {sideProjectList
         .sort((a, b) => a.get('position') - b.get('position'))
         .map((sideProject) => (
@@ -116,7 +112,7 @@ const Home = () => {
           </Link>
         ))
       }
-    </div>
+    </Content>
   );
 }
 

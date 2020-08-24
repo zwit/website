@@ -3,8 +3,10 @@ import cx from 'classnames';
 import { makeStyles } from '@material-ui/core/styles';
 import { CardActionArea, Card, CardMedia, CardActions, Typography, CardContent, Button, TextField } from '@material-ui/core';
 
-const useStyles = makeStyles({
+const useStyles = makeStyles(theme => ({
   root: {
+    backgroundColor: theme.backgroundColor,
+    color: theme.color,
     display: 'inline-block',
     marginLeft: '20px',
     marginTop: '20px',
@@ -15,11 +17,23 @@ const useStyles = makeStyles({
   },
   actionArea: {
     minHeight: 100,
+    color: theme.color,
+    border: theme.mediaCard.actionArea,
+  },
+  action: {
+    border: theme.mediaCard.actionArea,
+    color: theme.color,
   },
   displayBlock: {
     display: 'block',
+    color: theme.color,
+  },
+  button: {
+    padding: '6px 8px',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
   }
-});
+}));
 
 const MediaCard = ({category, onClick, onDelete, onSave, className, isEditingProp = false}) => {
   const classes = useStyles();
@@ -40,7 +54,7 @@ const MediaCard = ({category, onClick, onDelete, onSave, className, isEditingPro
               <Typography gutterBottom variant="h5" component="h2">
                 {category.get('title')}
               </Typography>
-              <Typography variant="body2" color="textSecondary" component="p">
+              <Typography variant="body2" component="p">
                 {category.get('description')}
               </Typography>
             </>}
@@ -65,25 +79,25 @@ const MediaCard = ({category, onClick, onDelete, onSave, className, isEditingPro
             </>}
           </CardContent>
         </CardActionArea>
-        <CardActions>
+        <CardActions className={classes.action}>
           {!isEditing && 
             <>
-              <Button size="small" color="primary" onClick={() => toggleEditing(!isEditing)}>
+              <span className={classes.button} onClick={() => toggleEditing(!isEditing)}>
                 Edit
-              </Button>
-              <Button size="small" color="primary" onClick={onDelete}>
+              </span>
+              <span className={classes.button} onClick={onDelete}>
                 Delete
-              </Button>
+              </span>
             </>
           }
           {isEditing && 
             <>
-              <Button onClick={() => {toggleEditing(!isEditing);onSave(newEntity)}} size="small" color="primary">
+              <span className={classes.button} onClick={() => {toggleEditing(!isEditing);onSave(newEntity)}}>
                 Save
-              </Button>
-              <Button onClick={() => toggleEditing(!isEditing)} size="small" color="primary">
+              </span>
+              <span className={classes.button} onClick={() => toggleEditing(!isEditing)}>
                 Cancel
-              </Button>
+              </span>
             </>
           }
         </CardActions>

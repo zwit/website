@@ -6,6 +6,7 @@ import moment from 'moment';
 import 'react-quill/dist/quill.snow.css';
 import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
+import cx from 'classnames';
 import 'react-infinite-calendar/styles.css'; // Make sure to import the default stylesheet
 
 class TimeLine extends React.Component {
@@ -249,16 +250,17 @@ class TimeLine extends React.Component {
 
     return (
       <div>
-        <MoveButton>
-          <PrevButton onClick={() => this.toggleTo('prev')}>Prev</PrevButton>
-          <NextButton onClick={() => this.toggleTo('next')}>Next</NextButton>
-        </MoveButton>
-        <LineWrapper id="line-wrapper">
-          <Line id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
+        <div className={classes.moveButton}>
+          <div className={classes.prevButton} onClick={() => this.toggleTo('prev')}>Prev</div>
+          <div className={classes.nextButton} onClick={() => this.toggleTo('next')}>Next</div>
+        </div>
+        <div id="line-wrapper" className={classes.lineWrapper}>
+          <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
           { dateList.map((date, index) => (
             <>
               { date.get('type') === 'point' &&  (
-                <StyledCircle
+                <div
+                  className={classes.styledCircle}
                   circleStyling={{
                     width: pointSize,
                     height: pointSize,
@@ -276,8 +278,8 @@ class TimeLine extends React.Component {
 
               { date.get('type') === 'range' && (
                 <>
-                  <RangeElement 
-                    className={selectedDate && selectedDate.get('id') === date.get('id') ? 'selected' : ''}
+                  <div 
+                    className={cx(classes.rangeElement, {'selected': selectedDate && selectedDate.get('id') === date.get('id')})}
                     style={{ 
                       marginLeft: this.getPosByDate(date) + timeLineCenterX,
                       width: this.getWidthByDate(date),
@@ -293,18 +295,18 @@ class TimeLine extends React.Component {
                     onClick={() => this.toggleTo(date)}
                   >
                     {!this.hasSameDates(date, dateList.get(index - 1)) && 
-                      <RangeDateStart>
+                      <div className={classes.rangeDateStart}>
                         {this.getStartDate(date).year()}
-                      </RangeDateStart>
+                      </div>
                     }
-                    <RangeDateEnd>{this.getEndDate(date).year()}</RangeDateEnd>
-                    <RangeText><RangeTextInner>{date.get('innerText')}</RangeTextInner></RangeText>
-                  </RangeElement>
+                    <div className={classes.rangeDateEnd}>{this.getEndDate(date).year()}</div>
+                    <div className={classes.rangeText}><div className={classes.rangeTextInner}>{date.get('innerText')}</div></div>
+                  </div>
                 </>
               )}
             </>
           ))}
-        </LineWrapper>
+        </div>
       </div>
     );
   }
@@ -317,177 +319,162 @@ const styles = theme => ({
     marginLeft: '30px',
     marginRight: '30px',
   },
+  lineWrapper: {
+    position: 'relative',
+    margin: '0 60px',
+    overflow: 'hidden',
+    clear: 'both',
+    cursor: 'pointer',
+    userSelect: 'none',
+    paddingTop: '45px',
+
+    '&:before': {
+      backgroundImage: `linear-gradient(to right, ${theme.backgroundColor}, rgba(248, 248, 248, 0))`,
+      left: 0,
+      content: '""',
+      position: 'absolute',
+      zIndex: 2,
+      top: 0,
+      height: '100%',
+      width: '20px',
+    },
+    '&:after': {
+      backgroundImage: `linear-gradient(to left, ${theme.backgroundColor}, rgba(248, 248, 248, 0))`,
+      right: 0,
+      content: '""',
+      position: 'absolute',
+      zIndex: 2,
+      top: 0,
+      height: '100%',
+      width: '20px',
+    }
+  },
+  rangeDateStart: {
+    position: 'absolute',
+    top: '-50px',
+    left: '-12px',
+    fontSize: '12px',
+    zIndex: 10,
+    color: theme.color,
+  },
+  rangeDateEnd: {
+    position: 'absolute',
+    fontSize: '12px',
+    top: '-50px',
+    right: '-12px',
+    color: theme.color,
+  },
+  rangeElement: {
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      width: '1px',
+      height: '20px',
+      background: theme.color,
+      top: '-20px',
+    },
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      width: '1px',
+      height: '20px',
+      background: theme.color,
+      top: '-20px',
+      right: 0,
+    },
+    '&.selected, &:hover': {
+      boxShadow: 'inset 0 0 5px white',
+    }
+  },
+  line: {
+    background: 'lightblue',
+    margin: 'auto',
+    width: '2000px',
+    userSelect: 'none',
+    border: `2px solid black`,
+  },
+  rangeText: {
+    textAlign: 'center',
+    height: '50px',
+    position: 'relative',
+  },
+  rangeTextInner: {
+    margin: 0,
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    msTransform: 'translate(-50%, -50%)',
+    transform: 'translate(-50%, -50%)',
+    width: 'fit-content',
+  },
+  nextButton: {
+    right: '10px',
+    '&:after': {
+      left: '50%',
+      webkitTransform: 'translateX(-50%) translateY(-50%)',
+      mozTransform: 'translateX(-50%) translateY(-50%)',
+      msTransform: 'translateX(-50%) translateY(-50%)',
+      oTransform: 'translateX(-50%) translateY(-50%)',
+      transform: 'translateX(-50%) translateY(-50%)',
+    },
+  },
+  prevButton: {
+    '&:after': {
+      left: '7px',
+      webkitTransform: 'translateY(-50%) rotate(180deg)',
+      mozTransform: 'translateY(-50%) rotate(180deg)',
+      msTransform: 'translateY(-50%) rotate(180deg)',
+      oTransform: 'translateY(-50%) rotate(180deg)',
+      transform: 'translateY(-50%) rotate(180deg)',
+    },
+  },
+  moveButton: {
+    marginLeft: '10px',
+
+    '& div': {
+      marginTop: '53px',
+      position: 'absolute',
+      bottom: 'auto',
+      height: '30px',
+      width: '30px',
+      borderRadius: '50%',
+      border: '2px solid #fff',
+      overflow: 'hidden',
+      color: 'transparent',
+      textIndent: '100%',
+      whiteSpace: 'nowrap',
+      webkitTransition: 'border-color 0.3s',
+      mozTransition: 'border-color 0.3s',
+      transition: 'border-color 0.3s',
+      cursor: 'pointer',
+
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      height: '16px',
+      width: '16px',
+      top: '50%',
+      bottom: 'auto',
+      right: 'auto',
+      background: 'url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw%0D%0AOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhl%0D%0AaWdodD0iMzJweCIgdmlld0JveD0iMCAwIDE2IDMyIj48ZyAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUo%0D%0AMCwgMCkiPjxwb2x5Z29uIGZpbGw9IiM3YjlkNmYiIHBvaW50cz0iNiwxMy40IDQuNiwxMiA4LjYs%0D%0AOCA0LjYsNCA2LDIuNiAxMS40LDggIi8+PC9nPjxnICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLCAx%0D%0ANikiPjxwb2x5Z29uIGZpbGw9IiNkZmRmZGYiIHBvaW50cz0iNiwxMy40IDQuNiwxMiA4LjYsOCA0%0D%0ALjYsNCA2LDIuNiAxMS40LDggIi8+PC9nPjwvc3ZnPg==) no-repeat 0 0',
+    },
+
+    '&:hover': {
+      borderColor: 'darkgrey',
+    }
+  }
+  },
+  styledCircle: {
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      width: '1px',
+      height: '20px',
+      background: 'black',
+      top: '-20px',
+    },
+  },
 });
-
-const LineWrapper = styled.div`
-  position: relative;
-  margin: 0 60px;
-  overflow: hidden;
-  clear: both;
-  cursor: pointer;
-  user-select: none;
-  padding-top: 45px;
-
-  &:before {
-    left: 0;
-    background-image: linear-gradient(to right, #f8f8f8, rgba(248, 248, 248, 0));
-    content: '';
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    height: 100%;
-    width: 20px;
-  }
-
-  &:after {
-    right: 0;
-    background-image: linear-gradient(to left, #f8f8f8, rgba(248, 248, 248, 0));
-
-    content: '';
-    position: absolute;
-    z-index: 2;
-    top: 0;
-    height: 100%;
-    width: 20px;
-  }
-`;
-
-const Line = styled.div`
-  background: lightblue;
-  margin: auto;
-  width: 2000px;
-  user-select: none;
-  border: 2px solid black;
-`;
-
-const RangeText = styled.div`
-  text-align: center;
-
-  height: 50px;
-  position: relative;
-`;
-
-const RangeTextInner = styled.div`
-  margin: 0;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  -ms-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  width: fit-content;
-`;
-
-const NextButton = styled.div`
-  right: 10px;
-  :after {
-    left: 50%;
-    -webkit-transform: translateX(-50%) translateY(-50%);
-    -moz-transform: translateX(-50%) translateY(-50%);
-    -ms-transform: translateX(-50%) translateY(-50%);
-    -o-transform: translateX(-50%) translateY(-50%);
-    transform: translateX(-50%) translateY(-50%);
-  }
-`;
-
-const PrevButton = styled.div`
-  :after {
-    left: 7px;
-    -webkit-transform: translateY(-50%) rotate(180deg);
-    -moz-transform: translateY(-50%) rotate(180deg);
-    -ms-transform: translateY(-50%) rotate(180deg);
-    -o-transform: translateY(-50%) rotate(180deg);
-    transform: translateY(-50%) rotate(180deg);
-  }
-`;
-
-const MoveButton = styled.div`
-  margin-left: 10px;
-
-  div {
-    margin-top: 53px;
-    position: absolute;
-    bottom: auto;
-    height: 30px;
-    width: 30px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    overflow: hidden;
-    color: transparent;
-    text-indent: 100%;
-    white-space: nowrap;
-    -webkit-transition: border-color 0.3s;
-    -moz-transition: border-color 0.3s;
-    transition: border-color 0.3s;
-    cursor: pointer;
-
-    :after {
-      content: '';
-      position: absolute;
-      height: 16px;
-      width: 16px;
-      top: 50%;
-      bottom: auto;
-      right: auto;
-      background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRw%0D%0AOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCIgd2lkdGg9IjE2cHgiIGhl%0D%0AaWdodD0iMzJweCIgdmlld0JveD0iMCAwIDE2IDMyIj48ZyAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUo%0D%0AMCwgMCkiPjxwb2x5Z29uIGZpbGw9IiM3YjlkNmYiIHBvaW50cz0iNiwxMy40IDQuNiwxMiA4LjYs%0D%0AOCA0LjYsNCA2LDIuNiAxMS40LDggIi8+PC9nPjxnICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLCAx%0D%0ANikiPjxwb2x5Z29uIGZpbGw9IiNkZmRmZGYiIHBvaW50cz0iNiwxMy40IDQuNiwxMiA4LjYsOCA0%0D%0ALjYsNCA2LDIuNiAxMS40LDggIi8+PC9nPjwvc3ZnPg==) no-repeat 0 0;
-    }
-
-    :hover {
-      border-color: darkgrey;
-    }
-  }
-`;
-
-const RangeDateStart = styled.div`
-  position: absolute;
-  top: -50px;
-  left: -12px;
-  font-size: 12px;
-  z-index: 10;
-  color: black;
-`;
-
-const RangeDateEnd = styled.div`
-  position: absolute;
-  font-size: 12px;
-  top: -50px;
-  right: -12px;
-  color: black;
-`;
-
-const StyledCircle = styled(Circle)`
-  :after {
-    content: '';
-    position: absolute;
-    width: 1px;
-    height: 20px;
-    background: black;
-    top: -20px;
-  }
-`;
-
-const RangeElement = styled.div`
-  :before {
-    content: '';
-    position: absolute;
-    width: 1px;
-    height: 20px;
-    background: black;
-    top: -20px;
-  }
-  :after {
-    content: '';
-    position: absolute;
-    width: 1px;
-    height: 20px;
-    background: black;
-    top: -20px;
-    right: 0;
-  }
-
-  &.selected, :hover {
-    box-shadow: inset 0 0 5px white;
-  }
-`;
 
 TimeLine.propTypes = {
 };

@@ -20,7 +20,7 @@ class App extends React.Component {
 
   render() {
     return (
-      <Content>
+      <>
         <BrowserRouter>
           <Switch>
             <Route exact path='/' component={Home} />
@@ -34,13 +34,9 @@ class App extends React.Component {
             <Route path='/ml' component={Ml} />
           </Switch>
         </BrowserRouter>
-      </Content>
+      </>
     );
   }
 }
-
-const Content = styled.div`
-  padding: 20px;
-`;
 
 export default App;

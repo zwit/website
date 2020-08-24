@@ -54,7 +54,7 @@ const Slider = ({ deleteEntity, entityList, postEntity, selectEntity, selectedEn
   );
 }
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   content: {
   },
   slider: {
@@ -66,7 +66,7 @@ const useStyles = makeStyles({
 
     '&::after': {
       right: '0',
-      backgroundImage: 'linear-gradient(to left,#f8f8f8,rgba(248,248,248,0))',
+      backgroundImage: `linear-gradient(to left,${theme.backgroundColor},rgba(248,248,248,0))`,
       content: '""',
       position: 'absolute',
       zIndex: '2',
@@ -76,7 +76,7 @@ const useStyles = makeStyles({
 
     '&::before': {
       left: '0',
-      backgroundImage: 'linear-gradient(to right,#f8f8f8,rgba(248,248,248,0))',
+      backgroundImage: `linear-gradient(to right,${theme.backgroundColor},rgba(248,248,248,0))`,
       content: '""',
       position: 'absolute',
       zIndex: '2',
@@ -93,10 +93,10 @@ const useStyles = makeStyles({
     boxShadow: 'none !important',
 
     '&.selected': {
-      color: 'orange',
+      color: theme.mediaCard.selected,
     }
   }
-});
+}));
 
 Slider.propTypes = {
   entityList: PropTypes.string.isRequired,
