@@ -10,7 +10,7 @@
     "@nivo/geo": "^0.62.0",
     "@nivo/line": "^0.62.0",
     "@nivo/pie": "^0.62.0",
-    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^12.1.2",
     "classnames": "^2.2.6",
