@@ -1,15 +1,12 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { TextField, FormControlLabel, Switch, Button, ButtonGroup, CircularProgress } from '@material-ui/core';
-import styled from 'styled-components';
-import backgroundMedieval from '../../images/background-medieval.png';
+import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
-import { makeStyles } from '@material-ui/core/styles';
 import SimpleCard from '../common/SimpleCard';
 import Slider from '../common/Slider';
 import debounce from 'debounce';
 
-export default class LangList extends React.Component {
+class LangList extends React.Component {
   constructor(props) {
     super(props);
 
@@ -24,6 +21,7 @@ export default class LangList extends React.Component {
     this.postLanguage = this.postLanguage.bind(this);
     this.deleteLanguage = this.deleteLanguage.bind(this);
     this.fetchLanguage = this.fetchLanguage.bind(this);
+    this.setSelectedFocus = this.setSelectedFocus.bind(this);
 
     this.debouncedPostIdeogram = debounce(
       this.postIdeogram.bind(this),
@@ -40,6 +38,7 @@ export default class LangList extends React.Component {
       count: 0,
       selectedLanguage: null,
       isLoading: true,
+      selectedFocus: 'ideogram',
     }
   }
 
@@ -108,9 +107,12 @@ export default class LangList extends React.Component {
     return fetch(`/api/ideogram?where={"language": "${lang.get('id')}"}`)
       .then(res => res.json())
       .then(ideogramList => {
-        this.setState({ 
-          ideogramList: List(ideogramList.map(ideogram => Map(ideogram))),
+        const newIdeogramList = List(ideogramList.map(ideogram => Map(ideogram)));
+        this.setState({
+          ideogramList: newIdeogramList,
         });
+
+        return newIdeogramList;
       });
   }
 
@@ -143,8 +145,10 @@ export default class LangList extends React.Component {
       isLoading: true,
     });
 
-    await this.fetchIdeograms(selectedLanguage);
+    const ideogramList = await this.fetchIdeograms(selectedLanguage);
     await this.fetchWords(selectedLanguage);
+
+    this.setSelectedFocus(ideogramList.size ? 'ideogram' : 'word');
 
     this.setState({
       isLoading: false,
@@ -187,6 +191,16 @@ export default class LangList extends React.Component {
     });
   }
 
+  setSelectedFocus(selectedFocus) {
+    const { ideogramList, wordList } = this.state;
+
+    this.setState({ 
+      selectedFocus,
+    });
+
+    this.generateRandomIndex(0, selectedFocus === 'ideogram' ? ideogramList.size : wordList.size)
+  }
+
   render() {
     const {
       ideogramList,
@@ -197,20 +211,25 @@ export default class LangList extends React.Component {
       wordList,
       selectedLanguage,
       isLoading,
+      selectedFocus,
     } = this.state;
 
     let buttonList = List();
-    const jump = 50;
-    for (let index = 0; index < ideogramList.size; index+=jump) {
-      buttonList = buttonList.push({ start: index, end: ideogramList.size > index + jump ? index + jump : ideogramList.size - 1 });
+    const jump = selectedFocus === 'ideogram' ? 50 : 200;
+    const focusList = selectedFocus === 'ideogram' ? ideogramList : wordList;
+
+    for (let index = 0; index < focusList.size; index+=jump) {
+      buttonList = buttonList.push({ start: index, end: focusList.size > index + jump ? index + jump : focusList.size - 1 });
     }
 
     const itemSearched = (searched !== '' || randomIndex !== null) && 
-      searched !== '' ? ideogramList.find(ideogram => ideogram.get('text') === searched) :
-      ideogramList.get(randomIndex);
+      searched !== '' ? focusList.find(ideogram => ideogram.get('text') === searched) :
+      focusList.get(randomIndex);
+    
+    const { classes } = this.props;
 
     return (
-      <div style={{minHeight: '1000px'}}>
+      <div style={{minHeight: '1100px'}}>
         <Slider
           entityList={languageList}
           selectEntity={this.selectLanguage}
@@ -220,79 +239,126 @@ export default class LangList extends React.Component {
           selectedEntity={selectedLanguage}
         />
 
-        <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
-          <Button>Ideogram</Button>
-          <Button>Word</Button>
-          <Button>Sentence</Button>
-        </ButtonGroup>
+        {!isLoading && <div>
+          <div className={classes.buttonGroup}>
+            <ButtonGroup variant="text" color="primary" aria-label="text primary button group">
+              {ideogramList.size && <Button onClick={() => this.setSelectedFocus('ideogram')}>Ideogram</Button>}
+              <Button onClick={() => this.setSelectedFocus('word')}>Word</Button>
+              <Button onClick={() => this.setSelectedFocus('sentence')}>Sentence</Button>
+            </ButtonGroup>
+          </div>
 
-        <FormControlLabel
-          control={<Switch
-            checked={displayEdition}
-            onChange={this.toggleDisplayEdition}
-            name="checkedB"
-            color="primary"
-          />}
-          label="Editer"
-        />
+          {/* <FormControlLabel
+            control={<Switch
+              checked={displayEdition}
+              onChange={this.toggleDisplayEdition}
+              name="checkedB"
+              color="primary"
+            />}
+            label="Editer"
+          /> */}
 
-        <TextField
-          label="searched" 
-          value={searched} 
-          onChange={(event) => this.setSearched(event.target.value)} 
-        />
+          <TextField
+            label="searched" 
+            value={searched} 
+            onChange={(event) => this.setSearched(event.target.value)} 
+          />
 
-        <Button 
-          variant="contained" 
-          onClick={() => this.generateRandomIndex(0, ideogramList.size)}
-        >
-          Get Random all
-        </Button>
+          <div className={classes.buttonGroup}>
+            <Button 
+              className={classes.button}
+              onClick={() => this.generateRandomIndex(0, focusList.size)}
+            >
+              Get Random all
+            </Button>
 
-        {buttonList.map(sample => (<Button 
-          variant="contained" 
-          onClick={() => this.generateRandomIndex(sample.start, sample.end - sample.start)}
-        >
-          {sample.start} - {sample.end}
-        </Button>))}
+            {buttonList.map(sample => (<Button
+              className={classes.button}
+              onClick={() => this.generateRandomIndex(sample.start, sample.end - sample.start)}
+            >
+              {sample.start} - {sample.end}
+            </Button>))}
+          </div>
 
-        <div className="mt5">
-        <div style={{float: 'left'}}>
-          {itemSearched && 
-            <SimpleCard
-              isEditing={displayEdition}
-              character={itemSearched}
-              setCharacter={this.setCharacter}
-              deleteCharacter={this.deleteIdeogram}
-            />
-          }
+          {selectedFocus === 'ideogram' && <div className="mt5">
+            <div style={{float: 'left'}}>
+              {itemSearched && 
+                <SimpleCard
+                  isEditing={displayEdition}
+                  character={itemSearched}
+                  setCharacter={this.setCharacter}
+                  deleteCharacter={this.deleteIdeogram}
+                />
+              }
 
-        {displayEdition && <SimpleCard
-          isEditing={true}
-          character={Map({description: '', text: '', language: selectedLanguage})}
-          setCharacter={this.setCharacter}
-        />}
-        </div>
-        <div style={{float: 'right', width: '74%', height: '500px', overflow: 'scroll'}}>
-        {itemSearched && wordList
-          .filter(word => word.get('text')
-            .match(itemSearched.get('text')) && word.get('text') !== itemSearched.get('text')
-          )
-          .map((word, index) => (
-          <div style={{float: 'left', margin: '5px'}}><SimpleCard
-            isEditing={false}
-            character={word}
-            setCharacter={this.setWord}
-            onClickCaracter={this.setSearched}
-            opened
-            displayIndex
-          /></div>
-        ))}
-        </div>
-        
-        </div>
+              {displayEdition && <SimpleCard
+                isEditing={true}
+                character={Map({description: '', text: '', language: selectedLanguage})}
+                setCharacter={this.setCharacter}
+              />}
+            </div>
 
-        {isLoading && <div style={{textAlign: 'center'}}>
+            <div style={{float: 'right', width: '74%', height: '500px', overflow: 'scroll'}}>
+              {itemSearched && wordList
+                .filter(word => word.get('text')
+                  .match(itemSearched.get('text')) && word.get('text') !== itemSearched.get('text')
+                )
+                .map((word, index) => (
+                <div style={{float: 'left', margin: '5px'}}>
+                  <SimpleCard
+                    isEditing={false}
+                    character={word}
+                    setCharacter={this.setWord}
+                    onClickCaracter={this.setSearched}
+                    opened
+                    displayIndex
+                  />
+                </div>
+              ))}
+            </div>
+          </div>}
+
+          {selectedFocus === 'word' && <div className="mt5">
+            <div style={{float: 'left'}}>
+              {itemSearched && 
+                <SimpleCard
+                  isEditing={displayEdition}
+                  character={itemSearched}
+                  setCharacter={this.setWord}
+                  deleteCharacter={this.deleteWord}
+                />
+              }
+
+              {displayEdition && <SimpleCard
+                isEditing={true}
+                character={Map({description: '', text: '', language: selectedLanguage})}
+                setCharacter={this.setCharacter}
+              />}
+            </div>
+
+            <div style={{float: 'right', width: '74%', height: '500px', overflow: 'scroll'}}>
+              {itemSearched && ideogramList
+                .filter(ideogram => itemSearched.get('text')
+                  .includes(ideogram.get('text')) && ideogram.get('text') !== itemSearched.get('text')
+                )
+                .map((ideogram, index) => (
+                <div style={{float: 'left', margin: '5px'}}>
+                  <SimpleCard
+                    isEditing={false}
+                    character={ideogram}
+                    setCharacter={this.setCharacter}
+                    onClickCaracter={this.setSearched}
+                    opened
+                    displayIndex
+                  />
+                </div>
+              ))}
+            </div>
+          </div>}
+        </div>}
+
+        {isLoading && 
+          <div style={{textAlign: 'center'}}>
             <CircularProgress />
           </div>
         }
@@ -304,5 +370,15 @@ export default class LangList extends React.Component {
   }
 }
 
-LangList.propTypes = {
-};
+const styles = theme => ({
+  button: {
+    color: theme.color,
+    border: `1px solid ${theme.color}`,
+  },
+  buttonGroup: {
+    textAlign: 'center',
+    marginTop: 10,
+  }
+});
+
+export default withStyles(styles, { withTheme: true })(LangList);

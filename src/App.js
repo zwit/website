@@ -12,6 +12,9 @@ import Book from './components/Book';
 import Art from './components/Art';
 import Stats from './components/Stats';
 import Ml from './components/Ml';
+import Geopol from './components/Geopol';
+import Culture from './components/Culture';
+import GeoEdit from './components/GeoEdit';
 
 class App extends React.Component {
   constructor(props) {
@@ -32,6 +35,9 @@ class App extends React.Component {
             <Route path='/art' component={Art} />
             <Route path='/stats' component={Stats} />
             <Route path='/ml' component={Ml} />
+            <Route path='/geopol' component={Geopol} />
+            <Route path='/culture' component={Culture} />
+            <Route path='/geoedit' component={GeoEdit} />
           </Switch>
         </BrowserRouter>
       </>

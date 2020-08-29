@@ -65,16 +65,16 @@ class APIomdb extends React.Component {
       <>
         <div className={classes.statsDisplay}>
           <h2 className={classes.title}>OMDb</h2>
-          {loading && <div className={classes.title}><CircularProgress /></div>}
+          
           {data && <div className={classes.title}>
             <TextField
               label="search" 
               value={search} 
               onChange={(event) => this.setSearch(event.target.value)} 
             />
+            {loading && <div className={classes.title}><CircularProgress /></div>}
             <pre>{JSON.stringify(data, null, 2) }</pre>
           </div>}
-          
         </div>
       </>
     );

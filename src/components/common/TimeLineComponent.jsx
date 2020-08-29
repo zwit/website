@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 import moment from 'moment';
-import ReactQuill, { Quill } from "react-quill";
 import 'react-quill/dist/quill.snow.css';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
@@ -10,12 +9,72 @@ import { TextField, Checkbox, Switch, FormControlLabel, CircularProgress, Button
 import DeleteIcon from '@material-ui/icons/Delete';
 import debounce from 'debounce';
 import { Map, List } from 'immutable';
-import InfiniteCalendar from 'react-infinite-calendar';
-import 'react-infinite-calendar/styles.css'; // Make sure to import the default stylesheet
 import TimeLine from './TimeLine';
 import Slider from './Slider';
 import TextEditor from './TextEditor';
 import YearSelector from './YearSelector';
+import GeoWorld from './GeoWorld';
+import MapBoxGl from './MapBoxGl';
+
+import {
+  romanEmpire200CE,
+  romanEmpire69CE,
+  romanEmpire14CE,
+  romanEmpire60BCE,
+  romanEmpire117CE,
+} from '../../utils/romanEmpire';
+
+import {
+  assyrian,
+  inca,
+  persian,
+  goldenHordeMongol,
+  alexander,
+  sumerian,
+  delianLeague,
+  abbasidCaliphate,
+  mongolYuan,
+  mongolIlkhanate,
+  mongolChagadai,
+  holyRomanEmpire,
+  // byzantine555,
+  aztec,
+  ancienEgypt,
+  maliEmpire,
+  umayyadCaliphate,
+  ghanaEmpire,
+  maya,
+  hittites,
+  babylonians,
+  delhiSultanate,
+  songhaiEmpire,
+  guptaEmpire,
+  phoenicians,
+  mauryanEmpire,
+  minoans,
+  timuridEmpire,
+  neoAssyrian,
+  neoAssyrianPostPileser,
+  peakNeoAssyrian,
+} from '../../utils/empires';
+
+import {
+  tangDynasty,
+  qinDynasty223,
+  qinDynasty209,
+  qingDynasty,
+  mingDynasty1389,
+  mingDynasty1582,
+  hanDynasty202,
+  hanDynasty109,
+  hanDynasty82,
+  songDynasty,
+  shangDynasty,
+  zhouDynasty,
+  xiaDynasty,
+} from '../../utils/chineseDynasties';
+
+import { tmp } from './utils';
 
 class TimeLineComponent extends React.Component {
   constructor(props) {
@@ -27,6 +86,10 @@ class TimeLineComponent extends React.Component {
       activityList: null,
       displayEdition: false,
       selectedActivity: null,
+      features: [],
+      lng: 5,
+      lat: 34,
+      zoom: 2
     }
 
     this.setEvent = this.setEvent.bind(this);
@@ -39,6 +102,8 @@ class TimeLineComponent extends React.Component {
     this.setActivityList = this.setActivityList.bind(this);
     this.deleteActivity = this.deleteActivity.bind(this);
     this.setSelectedDate = this.setSelectedDate.bind(this);
+    this.postActivity = this.postActivity.bind(this);
+    this.onDrag = this.onDrag.bind(this);
 
     this.debouncedPostDate = debounce(
       this.postDate.bind(this),
@@ -157,6 +222,10 @@ class TimeLineComponent extends React.Component {
   }
 
   selectActivity(activity) {
+    if (!activity) {
+      return;
+    }
+
     this.setState({
       selectedActivity: activity,
     });  
@@ -196,17 +265,105 @@ class TimeLineComponent extends React.Component {
     return moment(year.toString().padStart(4, '0'), 'YYYY').format("YYYY-MM-DD HH:mm:ss");
   }
 
+  onDrag(toYear) {
+    console.log(toYear);
+    this.setState({
+      features: []
+        .concat(romanEmpire60BCE.features)
+        .concat(romanEmpire200CE.features)
+        .concat(romanEmpire69CE.features)
+        .concat(romanEmpire14CE.features)
+        .concat(romanEmpire117CE.features)
+        .concat(assyrian.features)
+        .concat(inca.features)
+        .concat(persian.features)
+        .concat(goldenHordeMongol.features)
+        .concat(alexander.features)
+        .concat(sumerian.features)
+        .concat(delianLeague.features)
+        .concat(abbasidCaliphate.features)
+        .concat(mongolIlkhanate.features)
+        .concat(mongolYuan.features)
+        .concat(mongolChagadai.features)
+        .concat(holyRomanEmpire.features)
+        // .concat(byzantine555.features)
+        .concat(aztec.features)
+        .concat(ancienEgypt.features)
+        .concat(maliEmpire.features)
+        .concat(umayyadCaliphate.features)
+        .concat(ghanaEmpire.features)
+        .concat(maya.features)
+        .concat(babylonians.features)
+        .concat(hittites.features)
+        .concat(guptaEmpire.features)
+        .concat(delhiSultanate.features)
+        .concat(phoenicians.features)
+        .concat(songhaiEmpire.features)
+        .concat(mauryanEmpire.features)
+        .concat(tangDynasty.features)
+        .concat(minoans.features)
+        .concat(timuridEmpire.features)
+        .concat(neoAssyrian.features)
+        .concat(neoAssyrianPostPileser.features)
+        .concat(peakNeoAssyrian.features)
+        .concat(qinDynasty223.features)
+        .concat(qinDynasty209.features)
+        .concat(qingDynasty.features)
+        .concat(mingDynasty1389.features)
+        .concat(mingDynasty1582.features)
+        .concat(hanDynasty202.features)
+        .concat(hanDynasty109.features)
+        .concat(hanDynasty82.features)
+        .concat(songDynasty.features)
+        .concat(shangDynasty.features)
+        .concat(zhouDynasty.features)
+        .concat(xiaDynasty.features)
+        .filter(feature => feature.properties.from < toYear && feature.properties.to > toYear)
+    });   
+  }
+
   render() {
-    const { selectedDate, dateList, displayEdition, activityList, selectedActivity } = this.state;
-    const { displaySlider } = this.props;
+    const { selectedDate, dateList, displayEdition, activityList, selectedActivity, features } = this.state;
+    const { displaySlider, displayMap } = this.props;
     
     if (!activityList || !dateList) {
       return (<div style={{textAlign: 'center'}}>
         <CircularProgress />
       </div>)
     }
+
     return (
       <>
+        {displayMap && selectedActivity && <TimeLine
+          dateList={[]}
+          pointSize={20}
+          lineHeight={50}
+          setSelectedDate={this.setSelectedDate}
+          onDrag={this.onDrag}
+          displayHelpers
+        />}
+
+        {displayMap && <div>
+          <MapBoxGl
+            features={features}
+          />
+        </div>}
+
+        {/* {displayMap && <GeoWorld
+          data={tmp}
+          features={features}
+          onClick={(data) => 
+            this.selectActivity(
+              activityList
+                .find(activity => 
+                  activity.get('title') === data.label || 
+                  activity.get('title') === data.id || 
+                  (data.properties.id && activity.get('title') === data.properties.id)
+                )
+            )
+          }
+        />} */}
+
         {displaySlider && <Slider
           entityList={activityList}
           selectEntity={this.selectActivity}
@@ -225,6 +382,7 @@ class TimeLineComponent extends React.Component {
           />}
           label="Editer"
         /></div>
+
         {displayEdition && <Button 
           variant="contained" 
           onClick={() => {this.postDate({
@@ -340,11 +498,13 @@ const ContentDate = styled.div`
 
 TimeLineComponent.defaultProps = {
   displaySlider: true,
+  displayMap: false,
 };
 
 TimeLineComponent.propTypes = {
   type: PropTypes.string.isRequired,
-  displaySlider: PropTypes.bool.isRequired
+  displaySlider: PropTypes.bool,
+  displayMap: PropTypes.bool,
 };
 
 export default TimeLineComponent;

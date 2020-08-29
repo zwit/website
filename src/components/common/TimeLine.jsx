@@ -7,18 +7,25 @@ import 'react-quill/dist/quill.snow.css';
 import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
 import cx from 'classnames';
-import 'react-infinite-calendar/styles.css'; // Make sure to import the default stylesheet
+import { YEAR } from "../../utils";
 
 class TimeLine extends React.Component {
   constructor(props) {
     super(props);
 
+    let timeSteps = List();
+    for (let index = -5000; index < 2000; index+=100) {
+      timeSteps = timeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
+    }
+
     this.state = {
       selectedDate: null,
       activityList: List(),
-      timeLineCenterX: 0,
+      timeLineCenterX: 1800,
       displayEdition: false,
       lineHeight: 50,
+      zoom: 50000000000,
+      timeSteps,
     }
 
     this.toggleSelected = this.toggleSelected.bind(this);
@@ -29,9 +36,17 @@ class TimeLine extends React.Component {
     this.dragLineMouseMove = this.dragLineMouseMove.bind(this);
     this.orderDateList = this.orderDateList.bind(this);
     this.getPosByDate = this.getPosByDate.bind(this);
+    this.getDateByPos = this.getDateByPos.bind(this);
     this.getWidthByDate = this.getWidthByDate.bind(this);
     this.getMarginTop = this.getMarginTop.bind(this);
     this.hasSameDates = this.hasSameDates.bind(this);
+
+    const { onDrag } = this.props;
+    const { timeLineCenterX } = this.state;
+
+    if (onDrag) {
+      this.dragLineMouseMove({ movementX: 1});
+    }
   }
 
   getZoom(dateList, timeLineSpan) {
@@ -74,6 +89,12 @@ class TimeLine extends React.Component {
     const { zoom } = this.state;
 
     return this.getDiffDates(this.getTrueDate(date.get('date'), date.get('isDateBC'))) / zoom;
+  }
+
+  getDateByPos(pos) {
+    const { zoom, timeLineSpan } = this.state;
+
+    return Math.floor(moment().year() - (((pos - (timeLineSpan / 2)) * zoom) / YEAR));
   }
 
   getWidthByDate(date) {
@@ -164,10 +185,13 @@ class TimeLine extends React.Component {
 
   dragLineMouseMove(event) {
     const { timeLineCenterX } = this.state;
+    const { onDrag } = this.props;
 
     this.setState({
       timeLineCenterX: timeLineCenterX + event.movementX,
-    })
+    });
+
+    onDrag(this.getDateByPos(timeLineCenterX + event.movementX));
   }
 
   getMarginTop(date) {
@@ -197,11 +221,16 @@ class TimeLine extends React.Component {
   }
 
   toggleTo(operation) {
-    const { selectedDate, timeLineSpan } = this.state;
+    const { selectedDate, timeLineSpan, timeLineCenterX } = this.state;
     const { dateList } = this.props;
 
     let date = null;
     if (typeof operation === 'string') {
+      if (!dateList.size) {
+        this.dragLineMouseMove({ movementX: operation === 'next' ? -63 : 63})
+
+        return;
+      }
       const orderedList = this.orderDateList(dateList);
 
       const index = orderedList.findIndex(date => date.get('id') === selectedDate.get('id'));
@@ -245,8 +274,8 @@ class TimeLine extends React.Component {
   }
 
   render() {
-    const { selectedDate, timeLineCenterX, lineHeight } = this.state;
-    const { pointSize, classes, dateList } = this.props;
+    const { selectedDate, timeLineCenterX, lineHeight, timeSteps } = this.state;
+    const { pointSize, classes, dateList, displayHelpers } = this.props;
 
     return (
       <div>
@@ -256,6 +285,31 @@ class TimeLine extends React.Component {
         </div>
         <div id="line-wrapper" className={classes.lineWrapper}>
           <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
+          {displayHelpers && <div
+            style={{
+              marginTop: -lineHeight - (pointSize / 2) - 10,
+              position: 'absolute',
+              marginLeft: this.getPosByDate(Map({'date': moment(Math.abs(this.getDateByPos(timeLineCenterX)).toString().padStart(4, '0'), 'YYYY'), "isDateBC": this.getDateByPos(timeLineCenterX) < 0})) + timeLineCenterX,
+              zIndex: 100,
+            }}
+            selected={true}
+            onSelected={() => {}}
+          >{this.getDateByPos(timeLineCenterX)}</div>}
+          {displayHelpers && timeSteps.map((timeStep, index) => (
+            <div
+              className={classes.timeStep}
+              style={{
+                marginTop: -lineHeight - (pointSize / 2) + 33,
+                position: 'absolute',
+                marginLeft: this.getPosByDate(timeStep) + timeLineCenterX,
+                zIndex: 0,
+              }}
+              selected={true}
+              onSelected={() => {}}
+            >
+              {this.getStartDate(timeStep).year()}
+            </div>
+          ))}
           { dateList.map((date, index) => (
             <>
               { date.get('type') === 'point' &&  (
@@ -275,7 +329,6 @@ class TimeLine extends React.Component {
                   onSelected={() => this.toggleTo(date)}
                 />
               )}
-
               { date.get('type') === 'range' && (
                 <>
                   <div 
@@ -383,15 +436,15 @@ const styles = theme => ({
       right: 0,
     },
     '&.selected, &:hover': {
-      boxShadow: 'inset 0 0 5px white',
+      boxShadow: `inset 0 0 5px ${theme.backgroundColor}`,
     }
   },
   line: {
-    background: 'lightblue',
+    background: theme.lineColor,
     margin: 'auto',
     width: '2000px',
     userSelect: 'none',
-    border: `2px solid black`,
+    border: `2px solid ${theme.color}`,
   },
   rangeText: {
     textAlign: 'center',
@@ -464,6 +517,17 @@ const styles = theme => ({
     }
   }
   },
+  timeStep: {
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      width: '1px',
+      height: '20px',
+      background: theme.color,
+      top: '-25px',
+      left: '16px',
+    },
+  },
   styledCircle: {
     '&:after': {
       content: '""',
@@ -476,7 +540,12 @@ const styles = theme => ({
   },
 });
 
+TimeLine.defaultProps = {
+  displayHelpers: false,
+};
+
 TimeLine.propTypes = {
+  displayHelpers: PropTypes.bool,
 };
 
 export default withStyles(styles, { withTheme: true })(TimeLine);

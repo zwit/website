@@ -4,16 +4,14 @@ import MediaCard from './common/MediaCard';
 import { makeStyles } from '@material-ui/core/styles';
 import { deepOrange } from '@material-ui/core/colors';
 import { Link } from 'react-router-dom';
-import matrix from '../images/matrix.png';
+import age from '../images/age.jpeg';
 import tintin from '../images/tintin.png';
 import eratosthene from '../images/eratosthene.png';
 import interstellarBooks from '../images/interstellar-books.png';
 import yellowSubmarine from '../images/yellow-submarine.png';
 import oss117 from '../images/oss117.png';
-import castle from '../images/castle.jpg';
 import ai from '../images/ai.png';
 import stats from '../images/stats.png';
-import geojson from '../images/geojson.png';
 import Content from './common/Content';
 
 const useStyles = makeStyles((theme) => ({
@@ -32,59 +30,45 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Home = () => {
+const Culture = () => {
   const classes = useStyles();
   const [sideProjectList, setSideProjectList] = useState(List([Map({
-    url: '/stats',
-    title: 'Stats',
-    image: stats,
-    description: 'Stats charts',
+    url: '/history',
+    title: 'History',
+    image: oss117,
+    description: 'History timeline',
     position: 1,
   }), Map({
-    url: '/ml',
-    title: 'ML projects',
-    image: ai,
-    description: 'ML test',
-    position: 2,
-  }), Map({
-    url: '/geoedit',
-    title: 'GeoJSON Editor',
-    image: geojson,
-    description: '',
-    position: 3,
-  }), Map({
-    url: '/culture',
-    title: 'Uplift',
-    image: castle,
-    description: '',
+    url: '/lang',
+    title: 'Lang',
+    image: tintin,
+    description: 'Lang learning',
     position: 4,
   }), Map({
-    url: '/crypto',
-    title: 'Crypto',
-    image: matrix,
-    description: 'Crypto desc',
+    url: '/science',
+    title: 'Science',
+    image: eratosthene,
+    description: 'Science timeline',
+    position: 3,
+  }), Map({
+    url: '/art',
+    title: 'Art',
+    image: yellowSubmarine,
+    description: 'Art timeline',
+    position: 2,
+  }), Map({
+    url: '/book',
+    title: 'Book',
+    image: interstellarBooks,
+    description: 'Booknotes',
     position: 5,
+  }), Map({
+    url: '/geopol',
+    title: 'Geopolitics',
+    image: age,
+    description: '',
+    position: 9,
   })]));
-
-  const config =  {
-    spotify: {
-      client_id: 'YOUR_CLIENT_ID',
-      client_secret: 'YOUR_CLIENT_SECRET'
-    }
-  }
-
-  useEffect(() => {
-    // fetch('/api/activity')
-    //   .then(res => res.json())
-    //   .then(sideProjectList => {
-    //     // setSideProjectList(List(sideProjectList.map(activity => Map(activity))));
-    //   });
-    fetch('http://zwit.xyz:9200/_cat/health?v')
-      .then(res => res.json())
-      .then(sideProjectList => {
-        // setSideProjectList(List(sideProjectList.map(activity => Map(activity))));
-      });
-  })
 
   return (
     <Content>
@@ -100,4 +84,4 @@ const Home = () => {
   );
 }
 
-export default Home;
+export default Culture;
