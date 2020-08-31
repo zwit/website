@@ -118,6 +118,7 @@ class TimeLineComponent extends React.Component {
     this.postActivity = this.postActivity.bind(this);
     this.onDrag = this.onDrag.bind(this);
     this.toggleDrawer = this.toggleDrawer.bind(this);
+    this.onKeyup = this.onKeyup.bind(this);
 
     this.debouncedPostDate = debounce(
       this.postDate.bind(this),
@@ -136,6 +137,16 @@ class TimeLineComponent extends React.Component {
     const { currentYear } = this.state;
 
     this.onDrag(currentYear);
+    document.addEventListener('keyup', this.onKeyup);
+  }
+
+  onKeyup(event) {
+    const { selectedDate, selectedActivity, displayDrawer } = this.state;
+    if ((event.which === 38 || event.which === 32) && selectedDate && selectedActivity) {
+      this.toggleDrawer();
+    } else if ((event.which === 40 || event.which === 32) && displayDrawer) {
+      this.toggleDrawer();
+    }
   }
 
   fetchActivity() {
@@ -149,10 +160,6 @@ class TimeLineComponent extends React.Component {
         this.setState({ 
           activityList: stateActivityList,
         });
-
-        // if (!selectedActivity) {
-        //   this.selectActivity(stateActivityList.get(0));
-        // }
       });
   }
 
@@ -282,7 +289,6 @@ class TimeLineComponent extends React.Component {
   }
 
   onDrag(toYear) {
-    console.log(toYear);
     this.setState({
       currentYear: toYear,
       features: []
@@ -430,90 +436,88 @@ class TimeLineComponent extends React.Component {
         </div>}
 
         <Drawer anchor="bottom" open={displayDrawer} onClose={this.toggleDrawer}>
+          <div className={classes.editorContainer}>
+            {true && <div><FormControlLabel
+              control={<Switch
+                checked={displayEdition}
+                onChange={this.toggleDisplayEdition}
+                name="checkedB"
+                color="primary"
+              />}
+              label="Editer"
+            /></div>}
+            {selectedDate &&  (
+              <div className={classes.drawer}>
+                <CloseIcon fontSize='large' onClick={this.toggleDrawer}  className={classes.closeDrawer}/>
 
-        {false && <div><FormControlLabel
-          control={<Switch
-            checked={displayEdition}
-            onChange={this.toggleDisplayEdition}
-            name="checkedB"
-            color="primary"
-          />}
-          label="Editer"
-        /></div>}
-
-        <div className={classes.editorContainer}>
-          {selectedDate &&  (
-            <div className={classes.drawer}>
-              <CloseIcon fontSize='large' onClick={this.toggleDrawer}  className={classes.closeDrawer}/>
-
-              {displayEdition && (
-                <>
-                  <TextField
-                    label="Inner text" 
-                    value={selectedDate.get('innerText')} 
-                    onChange={(event) => this.setEvent('innerText', event.target.value)} 
-                  />
-                  <TextField
-                    label="Background"
-                    style={{width: 800}}
-                    value={selectedDate.get('background')} 
-                    onChange={(event) => this.setEvent('background', event.target.value)} 
-                  />
-                  <DeleteIcon style={{cursor: 'pointer'}} onClick={() => this.deleteDate(selectedDate)} />
-                  <SelectRangeText>
-                    <Select
-                      defaultValue={{value: selectedDate.get('type'), label: selectedDate.get('type')}}
-                      options={[{value: 'range', label: 'range'}, {value: 'point', label: 'point'}]}
+                {displayEdition && (
+                  <>
+                    <TextField
+                      label="Inner text" 
+                      value={selectedDate.get('innerText')} 
+                      onChange={(event) => this.setEvent('innerText', event.target.value)} 
                     />
-                  </SelectRangeText>
-                  
-                  <TwitterPicker
-                    triangle='hide'
-                    width="100%"
-                    color={selectedDate.get('color')}
-                    onChange={(color) => this.setEvent('color', color.hex)}
-                    colors={["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#ffffff"]}
-                  />
-                  <CalendarContainer>
-                    <FormControlLabel
-                      control={<Checkbox checked={selectedDate.get('isDateBC')} onChange={(event) => this.setEvent('isDateBC', event.target.checked)} name="checkedA" />}
-                      label="isDateBC"
+                    <TextField
+                      label="Background"
+                      style={{width: 800}}
+                      value={selectedDate.get('background')} 
+                      onChange={(event) => this.setEvent('background', event.target.value)} 
                     />
-                    <YearSelector
-                      defaultValue={moment(selectedDate.get('date')).year()}
-                      onSelect={(date) => this.setEvent('date', this.formatYear(date))}
-                      options={[...Array(5001).keys()].map(year => ({value: year, label: year}))}
+                    <DeleteIcon style={{cursor: 'pointer'}} onClick={() => this.deleteDate(selectedDate)} />
+                    <SelectRangeText>
+                      <Select
+                        defaultValue={{value: selectedDate.get('type'), label: selectedDate.get('type')}}
+                        options={[{value: 'range', label: 'range'}, {value: 'point', label: 'point'}]}
+                      />
+                    </SelectRangeText>
+                    
+                    <TwitterPicker
+                      triangle='hide'
+                      width="100%"
+                      color={selectedDate.get('color')}
+                      onChange={(color) => this.setEvent('color', color.hex)}
+                      colors={["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#ffffff"]}
                     />
-                  </CalendarContainer>
-                  {selectedDate.get('type') === 'range' && 
                     <CalendarContainer>
                       <FormControlLabel
-                      control={<Checkbox checked={selectedDate.get('isEndDateBC')} onChange={(event) => this.setEvent('isEndDateBC', event.target.checked)} name="checkedA" />}
-                      label="isDateBC"
-                    />
+                        control={<Checkbox checked={selectedDate.get('isDateBC')} onChange={(event) => this.setEvent('isDateBC', event.target.checked)} name="checkedA" />}
+                        label="isDateBC"
+                      />
                       <YearSelector
-                        defaultValue={moment(selectedDate.get('endDate')).year()}
-                        onSelect={(date) => this.setEvent('endDate', this.formatYear(date))}
+                        defaultValue={moment(selectedDate.get('date')).year()}
+                        onSelect={(date) => this.setEvent('date', this.formatYear(date))}
                         options={[...Array(5001).keys()].map(year => ({value: year, label: year}))}
                       />
                     </CalendarContainer>
-                  }
-                </>
-              )}
+                    {selectedDate.get('type') === 'range' && 
+                      <CalendarContainer>
+                        <FormControlLabel
+                        control={<Checkbox checked={selectedDate.get('isEndDateBC')} onChange={(event) => this.setEvent('isEndDateBC', event.target.checked)} name="checkedA" />}
+                        label="isDateBC"
+                      />
+                        <YearSelector
+                          defaultValue={moment(selectedDate.get('endDate')).year()}
+                          onSelect={(date) => this.setEvent('endDate', this.formatYear(date))}
+                          options={[...Array(5001).keys()].map(year => ({value: year, label: year}))}
+                        />
+                      </CalendarContainer>
+                    }
+                  </>
+                )}
 
-              {dateList.map((date) => (
-                <ContentDate>
-                  {selectedDate && selectedDate.get('id') === date.get('id') && (
-                    <TextEditor 
-                      text={date.get('text')} 
-                      onChangeText={(text) => this.setEvent('text', text)}
-                    />
-                  )}
-                </ContentDate>
-              ))}
-            </div>
-          )}
-        </div>
+                {dateList.map((date) => (
+                  <>
+                    {selectedDate && selectedDate.get('id') === date.get('id') && (
+                      <TextEditor 
+                        text={date.get('text')} 
+                        onChangeText={(text) => this.setEvent('text', text)}
+                      />
+                    )}
+                  </>
+                ))}
+              </div>
+            )}
+          </div>
         </Drawer>
       </>
     );
@@ -532,20 +536,11 @@ const SelectRangeText = styled.div`
   display: inline-block;
 `;
 
-const EditorContainer = styled.div`
-
-`;
-
-const ContentDate = styled.div`
-  padding: 10px;
-  display: inline-block;
-`;
-
 const styles = theme => ({
   timeLine: {
     position: 'absolute',
     opacity: 0.65,
-    width: '98vw',
+    width: '100vw',
     bottom: 20,
   },
   drawer: {
@@ -569,7 +564,9 @@ const styles = theme => ({
   },
   editorContainer: {
     color: theme.color,
-    backgroundColor: theme.backgroundColor
+    backgroundColor: theme.backgroundColor,
+    padding: '10px',
+    display: 'inline-block',
   },
   closeDrawer: {
     float: 'right',

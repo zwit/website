@@ -8,6 +8,7 @@ import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
 import cx from 'classnames';
 import { YEAR } from "../../utils";
+import { animated, useSpring } from "react-spring";
 
 class TimeLine extends React.Component {
   constructor(props) {
@@ -18,6 +19,11 @@ class TimeLine extends React.Component {
       timeSteps = timeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
     }
 
+    let subTimeSteps = List();
+    for (let index = -4950; index < 2500; index+=100) {
+      subTimeSteps = subTimeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
+    }
+
     this.state = {
       selectedDate: null,
       activityList: List(),
@@ -26,6 +32,8 @@ class TimeLine extends React.Component {
       lineHeight: 50,
       zoom: 50000000000,
       timeSteps,
+      subTimeSteps,
+      movingTimeout: -1,
     }
 
     this.toggleSelected = this.toggleSelected.bind(this);
@@ -40,6 +48,9 @@ class TimeLine extends React.Component {
     this.getWidthByDate = this.getWidthByDate.bind(this);
     this.getMarginTop = this.getMarginTop.bind(this);
     this.hasSameDates = this.hasSameDates.bind(this);
+    this.startMoving = this.startMoving.bind(this);
+    this.stopMoving = this.stopMoving.bind(this);
+    this.loop = this.loop.bind(this);
   }
 
   getZoom(dateList, timeLineSpan) {
@@ -47,7 +58,7 @@ class TimeLine extends React.Component {
       this.getDateSpan(curr) < this.getDateSpan(prev) ? curr : prev
     ));
 
-    return smallestSpan / timeLineSpan * 5;
+    return Math.floor(smallestSpan / timeLineSpan * 5);
   }
 
   orderDateList(dateList) {
@@ -81,7 +92,7 @@ class TimeLine extends React.Component {
   getPosByDate(date) {
     const { zoom } = this.state;
 
-    return this.getDiffDates(this.getTrueDate(date.get('date'), date.get('isDateBC'))) / zoom;
+    return (this.getDiffDates(this.getTrueDate(date.get('date'), date.get('isDateBC'))) / zoom);
   }
 
   getDateByPos(pos) {
@@ -107,17 +118,19 @@ class TimeLine extends React.Component {
   componentDidMount() {
     const timeLineSpan = document.getElementById('line-wrapper').getBoundingClientRect().width;
 
-    document.addEventListener('keyup', this.onKeyup);
-    document.addEventListener('swipeleft', () => this.toggleTo('prev'));
-    document.addEventListener('swiperight', () => this.toggleTo('next'));
+    document.addEventListener('keydown', this.onKeyup);
+    document.addEventListener('keyup', this.stopMoving);
     document.addEventListener('mouseup', this.removeDragLine);
 
     const { currentYear } = this.props;
     this.setState({ 
       timeLineSpan,
-      timeLineCenterX: - this.getPosByDate(Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0})) + (timeLineSpan / 2),
+      timeLineCenterX: - this.getPosByDate(this.craftDateFromYear(currentYear)) + (timeLineSpan / 2),
     });
-    console.log(this.getPosByDate(Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0})), Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0}));
+  }
+
+  craftDateFromYear(currentYear) {
+    return Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0});
   }
 
   getEndDate(date) {
@@ -149,7 +162,7 @@ class TimeLine extends React.Component {
     return lineHeight;
   }
 
-  componentDidUpdate(prevProps ) {
+  componentDidUpdate(prevProps) {
     const { dateList, currentYear } = this.props;
     const { selectedDate, timeLineSpan } = this.state;
 
@@ -173,8 +186,16 @@ class TimeLine extends React.Component {
           return selectedDate ? this.toggleTo(selectedDate) : this.toggleTo(dateList.get(0));
         })
       }
+    } else if (!dateList.size && prevProps.dateList.size) {
+      this.setState(() => ({ 
+        zoom: 50000000000,
+        selectedDate: null,
+      }), () => {
+        this.setState({
+          timeLineCenterX: - this.getPosByDate(this.craftDateFromYear(currentYear)) + (timeLineSpan / 2)
+        });
+      })
     }
-    
   }
 
   dragLine(event) {
@@ -224,14 +245,14 @@ class TimeLine extends React.Component {
     setSelectedDate(selectedDate);
   }
 
-  toggleTo(operation) {
-    const { selectedDate, timeLineSpan, timeLineCenterX } = this.state;
+  toggleTo(operation, step = 63) {
+    const { selectedDate, timeLineSpan } = this.state;
     const { dateList } = this.props;
 
     let date = null;
     if (typeof operation === 'string') {
       if (!dateList.size) {
-        this.dragLineMouseMove({ movementX: operation === 'next' ? -63 : 63})
+        this.dragLineMouseMove({ movementX: operation === 'next' ? -step : step})
 
         return;
       }
@@ -270,15 +291,43 @@ class TimeLine extends React.Component {
   }
 
   onKeyup(event) {
-    if (event.which === 37) {
-      this.toggleTo('prev');
-    } else if (event.which === 39) {
-      this.toggleTo('next');
+    const { dateList } = this.props;
+
+    if (event.which === 37 || (event.shiftKey && event.keyCode == 9)) {
+
+
+        this.startMoving('prev');
+    } else if (event.which === 39 || event.which === 8) {
+
+        this.startMoving('next');
     }
   }
 
+  stopMoving() {
+    const { movingTimeout } = this.state;
+
+    clearTimeout(movingTimeout);
+    this.setState({ movingTimeout: -1 });
+  }
+
+  startMoving(direction) {
+    console.log('dateList.size');
+    const { movingTimeout } = this.state;
+
+    if (movingTimeout === -1) {      
+      this.loop(direction);
+    }
+  }
+
+  loop(direction) {
+    const { selectedDate } = this.state;
+
+    this.toggleTo(direction, 5);
+    this.setState({ movingTimeout: setTimeout(this.loop, selectedDate ? 700 : 50, direction) });
+  }
+
   render() {
-    const { selectedDate, timeLineCenterX, lineHeight, timeSteps } = this.state;
+    const { selectedDate, timeLineCenterX, lineHeight, timeSteps, subTimeSteps } = this.state;
     const { pointSize, classes, dateList, displayHelpers } = this.props;
 
     return (
@@ -287,32 +336,40 @@ class TimeLine extends React.Component {
           <div className={classes.prevButton} onClick={() => this.toggleTo('prev')}>Prev</div>
           <div className={classes.nextButton} onClick={() => this.toggleTo('next')}>Next</div>
         </div>
+        {displayHelpers && <div
+          className={classes.tooltip}
+          selected={true}
+          onSelected={() => {}}
+        >{this.getDateByPos(timeLineCenterX)}</div>}
         <div id="line-wrapper" className={classes.lineWrapper}>
           <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
-          {displayHelpers && <div
-            style={{
-              marginTop: -lineHeight - (pointSize / 2) - 10,
-              position: 'absolute',
-              marginLeft: this.getPosByDate(Map({'date': moment(Math.abs(this.getDateByPos(timeLineCenterX)).toString().padStart(4, '0'), 'YYYY'), "isDateBC": this.getDateByPos(timeLineCenterX) < 0})) + timeLineCenterX,
-              zIndex: 100,
-            }}
-            selected={true}
-            onSelected={() => {}}
-          >{this.getDateByPos(timeLineCenterX)}</div>}
           {displayHelpers && timeSteps.map((timeStep, index) => (
             <div
               className={classes.timeStep}
               style={{
                 marginTop: -lineHeight - (pointSize / 2) + 33,
                 position: 'absolute',
-                marginLeft: this.getPosByDate(timeStep) + timeLineCenterX,
-                zIndex: 0,
+                marginLeft: this.getPosByDate(timeStep) + timeLineCenterX - 18,
+                zIndex: -1,
               }}
               selected={true}
               onSelected={() => {}}
             >
               {this.getStartDate(timeStep).year()}
             </div>
+          ))}
+          {displayHelpers && subTimeSteps.map((subTimeStep, index) => (
+            <div
+              className={classes.subTimeStep}
+              style={{
+                marginTop: -lineHeight - (pointSize / 2) + 33,
+                position: 'absolute',
+                marginLeft: this.getPosByDate(subTimeStep) + timeLineCenterX - 18,
+                zIndex: 0,
+              }}
+              selected={true}
+              onSelected={() => {}}
+            />
           ))}
           { dateList.map((date, index) => (
             <>
@@ -325,7 +382,7 @@ class TimeLine extends React.Component {
                     backgroundColor: 'red',
                     marginTop: -lineHeight - (pointSize / 2),
                     position: 'absolute',
-                    marginLeft: this.getPosByDate(date) + timeLineCenterX,
+                    marginLeft: this.getPosByDate(date) + timeLineCenterX - 18,
                     transition: '0.5s all ease',
                     zIndex: 10,
                   }}
@@ -338,7 +395,7 @@ class TimeLine extends React.Component {
                   <div 
                     className={cx(classes.rangeElement, {'selected': selectedDate && selectedDate.get('id') === date.get('id')})}
                     style={{ 
-                      marginLeft: this.getPosByDate(date) + timeLineCenterX,
+                      marginLeft: this.getPosByDate(date) + timeLineCenterX - 18,
                       width: this.getWidthByDate(date),
                       background: date.get('background'),
                       color: date.get('color'),
@@ -352,11 +409,11 @@ class TimeLine extends React.Component {
                     onClick={() => this.toggleTo(date)}
                   >
                     {!this.hasSameDates(date, dateList.get(index - 1)) && 
-                      <div className={classes.rangeDateStart}>
+                      <div className={cx(classes.rangeDateContainer, classes.rangeDateStartContainer)}><div className={cx(classes.rangeDateStart, classes.rangeDate)}>
                         {this.getStartDate(date).year()}
-                      </div>
+                      </div></div>
                     }
-                    <div className={classes.rangeDateEnd}>{this.getEndDate(date).year()}</div>
+                    <div className={cx(classes.rangeDateContainer, classes.rangeDateEndContainer)}><div className={cx(classes.rangeDateEnd, classes.rangeDate)}>{this.getEndDate(date).year()}</div></div>
                     <div className={classes.rangeText}><div className={classes.rangeTextInner}>{date.get('innerText')}</div></div>
                   </div>
                 </>
@@ -371,19 +428,22 @@ class TimeLine extends React.Component {
 
 const styles = theme => ({
   slider: {
-    overflow: 'hidden',
+    overflowX: 'hidden',
+    overflowY: 'visible',
     display: 'flex',
     marginLeft: '30px',
     marginRight: '30px',
   },
   lineWrapper: {
+    background: theme.lineColor,
     position: 'relative',
     margin: '0 60px',
-    overflow: 'hidden',
+    overflowX: 'hidden',
+    overflowY: 'visible',
     clear: 'both',
     cursor: 'pointer',
     userSelect: 'none',
-    paddingTop: '45px',
+    zIndex: 0,
 
     '&:before': {
       backgroundImage: `linear-gradient(to right, ${theme.backgroundColor}, rgba(248, 248, 248, 0))`,
@@ -406,37 +466,58 @@ const styles = theme => ({
       width: '20px',
     }
   },
-  rangeDateStart: {
+  rangeDateStartContainer: {
+    left: -25,
+  },
+  rangeDateEndContainer: {
+    right: -25,
+  },
+  rangeDateContainer: {
+    width: 50,
     position: 'absolute',
-    top: '-50px',
-    left: '-12px',
+    top: 16,
+    zIndex: 1,
+
+    '&:hover': {
+      zIndex: 12,
+    }
+  },
+  rangeDate: {
+    top: 16,
     fontSize: '12px',
     zIndex: 10,
-    color: theme.color,
+    color: 'white',
+    backgroundColor: 'black',
+    padding: 3,
+    borderRadius: 5,
+    border: '1px solid white',
+    boxShadow: '0px 0px 15px 1px rgba(0, 0, 0, 0.7)',
+    lineHeight: '100%',
+    display: 'table',
+    margin: '0 auto',
+  },
+  rangeDateStart: {
+    left: -16,
   },
   rangeDateEnd: {
-    position: 'absolute',
-    fontSize: '12px',
-    top: '-50px',
-    right: '-12px',
-    color: theme.color,
+    right: -16,
   },
   rangeElement: {
     '&:before': {
       content: '""',
       position: 'absolute',
       width: '1px',
-      height: '20px',
-      background: theme.color,
-      top: '-20px',
+      height: 50,
+      background: 'white',
+      top: 0,
     },
     '&:after': {
       content: '""',
       position: 'absolute',
       width: '1px',
-      height: '20px',
-      background: theme.color,
-      top: '-20px',
+      height: 50,
+      background: 'white',
+      top: 0,
       right: 0,
     },
     '&.selected, &:hover': {
@@ -444,7 +525,7 @@ const styles = theme => ({
     }
   },
   line: {
-    background: theme.lineColor,
+    zIndex: 100,
     margin: 'auto',
     width: '2000px',
     userSelect: 'none',
@@ -454,6 +535,7 @@ const styles = theme => ({
     textAlign: 'center',
     height: '50px',
     position: 'relative',
+    cursor: 'pointer',
   },
   rangeTextInner: {
     margin: 0,
@@ -489,7 +571,7 @@ const styles = theme => ({
     marginLeft: '10px',
 
     '& div': {
-      marginTop: '53px',
+      marginTop: '8px',
       position: 'absolute',
       bottom: 'auto',
       height: '30px',
@@ -529,6 +611,17 @@ const styles = theme => ({
       height: '20px',
       background: theme.color,
       top: '-25px',
+      left: '19px',
+    },
+  },
+  subTimeStep: {
+    '&:after': {
+      content: '""',
+      position: 'absolute',
+      width: '1px',
+      height: '10px',
+      background: theme.color,
+      top: '-25px',
       left: '16px',
     },
   },
@@ -541,6 +634,43 @@ const styles = theme => ({
       background: 'black',
       top: '-20px',
     },
+  },
+  tooltip: {
+    position: 'absolute',
+    zIndex: 100,
+    left: 0,
+    right: 0,
+    top: -45,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    textAlign: 'center',
+
+    width: '33px',
+    height: '34px',
+    borderRadius: '5px',
+    position: 'absolute',
+    background: '#fff',
+    zIndex: 2,
+    padding: '0 15px',
+    boxShadow: '0 10px 30px rgba(#414856, 0.05)',
+    display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    transition: 'opacity .15s ease-in, top .15s ease-in, width .15s ease-in',
+
+    '&:after': {
+      content: '""',
+      width: '20px',
+      height: '20px',
+      background: '#fff',
+      borderRadius: '3px',
+      position: 'absolute',
+      left: '50%',
+      marginLeft: '-10px',
+      bottom: '-8px',
+      transform: 'rotate(45deg)',
+      zIndex: -1,
+    }
   },
 });
 

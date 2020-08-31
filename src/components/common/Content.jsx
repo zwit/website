@@ -7,6 +7,7 @@ import Avatar from '@material-ui/core/Avatar';
 import { deepOrange, deepPurple } from '@material-ui/core/colors';
 import InvertColorsIcon from '@material-ui/icons/InvertColors';
 import ContentInner from './ContentInner';
+import cx from 'classnames';
 
 const HOME = '/';
 
@@ -46,6 +47,7 @@ const useStyles = makeStyles((theme) => ({
   root: {
     minHeight: '100vh',
     height: '100%',
+    overflow: 'scroll',
   },
   homeButton: {
     '& a': {
@@ -66,21 +68,35 @@ const useStyles = makeStyles((theme) => ({
   },
   header: {
     minHeight: 50,
-  }
+  },
+  headerAbsolute: {
+    position: 'absolute',
+    zIndex: 10,
+    width: '100%',
+    opacity: 0.7,
+    paddingTop: 20,
+  },
+  marginLeft: {
+    marginLeft: 20,
+  },
+  marginRight: {
+    marginRight: 20,
+  },
 }));
 
-export default function Content(props) {
+export default function Content({ children, absolute = false }) {
   const classes = useStyles();
   const { pathname } = useLocation();
   const [selectedTheme, selectTheme] = useState(themeBlack);
 
   return (
     <ThemeProvider theme={selectedTheme}>
-      <ContentInner>
+      <ContentInner absolute={absolute}>
         <div className={classes.root}>
-          {props.displayHeader && <div className={classes.header}>
+          <div className={cx(absolute ? classes.headerAbsolute : classes.header)}>
+            <span className={cx(absolute ? classes.padding : null)}></span>
             {pathname !== HOME && (
-              <span className={classes.homeButton}>
+              <span className={cx(absolute ? classes.marginLeft : null, classes.homeButton)}>
                 <Link to="/">
                   <Button variant="contained">
                     Home
@@ -88,13 +104,13 @@ export default function Content(props) {
                 </Link>
               </span>
             )}
-            <Avatar className={classes.avatar}>J</Avatar>
+            <Avatar className={cx(absolute ? classes.marginRight : null, classes.avatar)}>J</Avatar>
             <InvertColorsIcon 
               className={classes.themeButton} 
               onClick={() => selectTheme(selectedTheme.name === 'whiteTheme' ? themeBlack : themeWhite)}
             />
-          </div>}
-          { props.children }
+          </div>
+          { children }
         </div>
       </ContentInner>
     </ThemeProvider>

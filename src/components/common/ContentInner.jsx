@@ -1,21 +1,24 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import cx from 'classnames';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles((theme, absolute) => ({
   root: {
     color: theme.color,
     backgroundColor: theme.backgroundColor,
     height: '100%',
-    // padding: 20,
   },
+  padding: {
+    padding: 20,
+  }
 }));
 
-export default function Content(props) {
+export default function Content({ children, absolute }) {
   const classes = useStyles();
 
   return (
-    <div className={classes.root}>
-      { props.children }
+    <div className={cx(classes.root, absolute ? null : classes.padding)}>
+      { children }
     </div>
   );
 }
