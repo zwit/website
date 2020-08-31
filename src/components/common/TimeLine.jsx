@@ -14,14 +14,14 @@ class TimeLine extends React.Component {
     super(props);
 
     let timeSteps = List();
-    for (let index = -5000; index < 2000; index+=100) {
+    for (let index = -5000; index < 2500; index+=100) {
       timeSteps = timeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
     }
 
     this.state = {
       selectedDate: null,
       activityList: List(),
-      timeLineCenterX: 1800,
+      timeLineCenterX: null,
       displayEdition: false,
       lineHeight: 50,
       zoom: 50000000000,
@@ -40,13 +40,6 @@ class TimeLine extends React.Component {
     this.getWidthByDate = this.getWidthByDate.bind(this);
     this.getMarginTop = this.getMarginTop.bind(this);
     this.hasSameDates = this.hasSameDates.bind(this);
-
-    const { onDrag } = this.props;
-    const { timeLineCenterX } = this.state;
-
-    if (onDrag) {
-      this.dragLineMouseMove({ movementX: 1});
-    }
   }
 
   getZoom(dateList, timeLineSpan) {
@@ -119,7 +112,12 @@ class TimeLine extends React.Component {
     document.addEventListener('swiperight', () => this.toggleTo('next'));
     document.addEventListener('mouseup', this.removeDragLine);
 
-    this.setState({ timeLineSpan });
+    const { currentYear } = this.props;
+    this.setState({ 
+      timeLineSpan,
+      timeLineCenterX: - this.getPosByDate(Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0})) + (timeLineSpan / 2),
+    });
+    console.log(this.getPosByDate(Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0})), Map({'date': moment(Math.abs(currentYear).toString().padStart(4, '0'), 'YYYY'), "isDateBC": currentYear < 0}));
   }
 
   getEndDate(date) {
@@ -151,8 +149,8 @@ class TimeLine extends React.Component {
     return lineHeight;
   }
 
-  componentDidUpdate(prevProps) {
-    const { dateList } = this.props;
+  componentDidUpdate(prevProps ) {
+    const { dateList, currentYear } = this.props;
     const { selectedDate, timeLineSpan } = this.state;
 
     const isSelectedDateNotFound = dateList.size && (!selectedDate || !dateList.filter((date) => date.get('id') === selectedDate.get('id')).size);
@@ -168,7 +166,11 @@ class TimeLine extends React.Component {
           zoom: this.getZoom(dateList, timeLineSpan),
           lineHeight: this.getLineHeight(dateList),
         }), () => {
-          this.toggleTo(dateList.get(0));
+          const selectedDate = currentYear && dateList.find(date => 
+            this.getTrueDate(date.get('date'), date.get('isDateBC')).year() < currentYear &&
+            this.getTrueDate(date.get('endDate'), date.get('isEndDateBC')).year() > currentYear
+          );
+          return selectedDate ? this.toggleTo(selectedDate) : this.toggleTo(dateList.get(0));
         })
       }
     }
@@ -203,7 +205,7 @@ class TimeLine extends React.Component {
 
   toggleSelected(selectedDate) {
     const { timeLineSpan } = this.state;
-    const { setSelectedDate } = this.props;
+    const { setSelectedDate, onDrag } = this.props;
 
     let shift = timeLineSpan / 2;
     if (selectedDate.get('endDate')) {
@@ -216,6 +218,8 @@ class TimeLine extends React.Component {
       selectedDate,
       timeLineCenterX,
     });
+
+    onDrag(this.getDateByPos(timeLineCenterX));
 
     setSelectedDate(selectedDate);
   }

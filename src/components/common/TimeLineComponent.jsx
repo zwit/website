@@ -5,8 +5,10 @@ import 'react-quill/dist/quill.snow.css';
 import Select from 'react-select';
 import { TwitterPicker } from 'react-color';
 import PropTypes from 'prop-types';
-import { TextField, Checkbox, Switch, FormControlLabel, CircularProgress, Button } from '@material-ui/core';
+import { TextField, Checkbox, Switch, FormControlLabel, CircularProgress, Button, Drawer } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
+import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+import CloseIcon from '@material-ui/icons/Close';
 import debounce from 'debounce';
 import { Map, List } from 'immutable';
 import TimeLine from './TimeLine';
@@ -15,6 +17,7 @@ import TextEditor from './TextEditor';
 import YearSelector from './YearSelector';
 import GeoWorld from './GeoWorld';
 import MapBoxGl from './MapBoxGl';
+import { withStyles } from "@material-ui/core/styles";
 
 import {
   romanEmpire200CE,
@@ -74,7 +77,15 @@ import {
   xiaDynasty,
 } from '../../utils/chineseDynasties';
 
+import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, Source } from 'react-mapbox-gl';
+
 import { tmp } from './utils';
+
+const TOKEN = 'pk.eyJ1IjoibnVteSIsImEiOiJja2Vmc2c4eHgwdGJnMnFuN3NnYmUwdWdwIn0.RN4cGa2_56cvYD47hRUctA';
+
+const Mapbox = ReactMapboxGl({
+  accessToken: TOKEN
+});
 
 class TimeLineComponent extends React.Component {
   constructor(props) {
@@ -89,8 +100,10 @@ class TimeLineComponent extends React.Component {
       features: [],
       lng: 5,
       lat: 34,
-      zoom: 2
-    }
+      zoom: 2,
+      currentYear: 200,
+      displayDrawer: false,
+    };
 
     this.setEvent = this.setEvent.bind(this);
     this.deleteDate = this.deleteDate.bind(this);
@@ -104,6 +117,7 @@ class TimeLineComponent extends React.Component {
     this.setSelectedDate = this.setSelectedDate.bind(this);
     this.postActivity = this.postActivity.bind(this);
     this.onDrag = this.onDrag.bind(this);
+    this.toggleDrawer = this.toggleDrawer.bind(this);
 
     this.debouncedPostDate = debounce(
       this.postDate.bind(this),
@@ -118,6 +132,10 @@ class TimeLineComponent extends React.Component {
 
   componentDidMount() {
     this.fetchDates();
+
+    const { currentYear } = this.state;
+
+    this.onDrag(currentYear);
   }
 
   fetchActivity() {
@@ -132,9 +150,9 @@ class TimeLineComponent extends React.Component {
           activityList: stateActivityList,
         });
 
-        if (!selectedActivity) {
-          this.selectActivity(stateActivityList.get(0));
-        }
+        // if (!selectedActivity) {
+        //   this.selectActivity(stateActivityList.get(0));
+        // }
       });
   }
 
@@ -222,17 +240,15 @@ class TimeLineComponent extends React.Component {
   }
 
   selectActivity(activity) {
-    if (!activity) {
-      return;
-    }
+    const { selectedActivity } = this.state;
 
     this.setState({
       selectedActivity: activity,
+      displayDrawer: selectedActivity && activity && selectedActivity.get('title') === activity.get('title'),
     });  
   }
 
   setEvent(field, value) {
-    debugger;
     const { dateList, selectedDate } = this.state;
 
     const dateListIndex = dateList.findIndex(date => date.get('id') === selectedDate.get('id'));
@@ -268,6 +284,7 @@ class TimeLineComponent extends React.Component {
   onDrag(toYear) {
     console.log(toYear);
     this.setState({
+      currentYear: toYear,
       features: []
         .concat(romanEmpire60BCE.features)
         .concat(romanEmpire200CE.features)
@@ -322,9 +339,17 @@ class TimeLineComponent extends React.Component {
     });   
   }
 
+  toggleDrawer() {
+    const { displayDrawer } = this.state;
+
+    this.setState({
+      displayDrawer: !displayDrawer,
+    })
+  }
+
   render() {
-    const { selectedDate, dateList, displayEdition, activityList, selectedActivity, features } = this.state;
-    const { displaySlider, displayMap } = this.props;
+    const { selectedDate, dateList, displayEdition, activityList, selectedActivity, features, currentYear, displayDrawer } = this.state;
+    const { displaySlider, displayMap, classes } = this.props;
     
     if (!activityList || !dateList) {
       return (<div style={{textAlign: 'center'}}>
@@ -334,22 +359,30 @@ class TimeLineComponent extends React.Component {
 
     return (
       <>
-        {displayMap && selectedActivity && <TimeLine
-          dateList={[]}
-          pointSize={20}
-          lineHeight={50}
-          setSelectedDate={this.setSelectedDate}
-          onDrag={this.onDrag}
-          displayHelpers
-        />}
+        {/* {displayMap &&  <div>
+          <Mapbox
+            style="mapbox://styles/mapbox/outdoors-v11?optimize=true"
+            containerStyle={{
+              height: '100vh',
+              width: '100vw',
+              flex: 1,
+            }}
+            center={[5, 34]}
+          >
+            <GeoJSONLayer
+              fillLayout={{ visibility: 'visible' }}
+              fillPaint={{
+                'fill-color': 'orange',
+              }}
+              data={{
+                "type": "FeatureCollection",
+                "features": features
+              }}
+            />
+          </Mapbox>
+        </div>} */}
 
-        {displayMap && <div>
-          <MapBoxGl
-            features={features}
-          />
-        </div>}
-
-        {/* {displayMap && <GeoWorld
+        {displayMap && <GeoWorld
           data={tmp}
           features={features}
           onClick={(data) => 
@@ -362,7 +395,7 @@ class TimeLineComponent extends React.Component {
                 )
             )
           }
-        />} */}
+        />}
 
         {displaySlider && <Slider
           entityList={activityList}
@@ -373,16 +406,6 @@ class TimeLineComponent extends React.Component {
           selectedEntity={selectedActivity}
         />}
 
-        <div><FormControlLabel
-          control={<Switch
-            checked={displayEdition}
-            onChange={this.toggleDisplayEdition}
-            name="checkedB"
-            color="primary"
-          />}
-          label="Editer"
-        /></div>
-
         {displayEdition && <Button 
           variant="contained" 
           onClick={() => {this.postDate({
@@ -392,16 +415,37 @@ class TimeLineComponent extends React.Component {
           Add Event
         </Button>}
 
-        {selectedActivity && <TimeLine
-          dateList={dateList.filter(date => date.get('activity').id === selectedActivity.get('id'))}
+        {displayMap && <div className={classes.timeLine}><TimeLine
+          dateList={selectedActivity ? dateList.filter(date => date.get('activity').id === selectedActivity.get('id')) : []}
           pointSize={20}
           lineHeight={50}
           setSelectedDate={this.setSelectedDate}
-        />}
+          onDrag={this.onDrag}
+          currentYear={currentYear}
+          displayHelpers={selectedActivity ? false : true}
+        /></div>}
 
-        <EditorContainer>
+        {selectedDate && selectedActivity && <div className={classes.toggleDrawer}>
+          <ExpandLessIcon className={classes.drawerIcon} onClick={this.toggleDrawer}/>
+        </div>}
+
+        <Drawer anchor="bottom" open={displayDrawer} onClose={this.toggleDrawer}>
+
+        {false && <div><FormControlLabel
+          control={<Switch
+            checked={displayEdition}
+            onChange={this.toggleDisplayEdition}
+            name="checkedB"
+            color="primary"
+          />}
+          label="Editer"
+        /></div>}
+
+        <div className={classes.editorContainer}>
           {selectedDate &&  (
-            <>
+            <div className={classes.drawer}>
+              <CloseIcon fontSize='large' onClick={this.toggleDrawer}  className={classes.closeDrawer}/>
+
               {displayEdition && (
                 <>
                   <TextField
@@ -467,9 +511,10 @@ class TimeLineComponent extends React.Component {
                   )}
                 </ContentDate>
               ))}
-            </>
+            </div>
           )}
-        </EditorContainer>
+        </div>
+        </Drawer>
       </>
     );
   }
@@ -478,7 +523,7 @@ class TimeLineComponent extends React.Component {
 const CalendarContainer = styled.div`
   margin: auto;
   display: inline-block;
-  padding: 20px;
+
 `;
 
 const SelectRangeText = styled.div`
@@ -488,13 +533,50 @@ const SelectRangeText = styled.div`
 `;
 
 const EditorContainer = styled.div`
-  padding: 20px;
+
 `;
 
 const ContentDate = styled.div`
   padding: 10px;
   display: inline-block;
 `;
+
+const styles = theme => ({
+  timeLine: {
+    position: 'absolute',
+    opacity: 0.65,
+    width: '98vw',
+    bottom: 20,
+  },
+  drawer: {
+    color: theme.color,
+    backgroundColor: theme.backgroundColor
+  },
+  toggleDrawer: {
+    position: 'absolute',
+    bottom: 60,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    left: 0,
+    right: 0,
+    cursor: 'pointer',
+    textAlign: 'center',
+    fontSize: 60,
+  },
+  drawerIcon: {
+    fontSize: 50,
+    marginRight: 30,
+  },
+  editorContainer: {
+    color: theme.color,
+    backgroundColor: theme.backgroundColor
+  },
+  closeDrawer: {
+    float: 'right',
+    padding: 5,
+    cursor: 'pointer',
+  }
+});
 
 TimeLineComponent.defaultProps = {
   displaySlider: true,
@@ -507,4 +589,4 @@ TimeLineComponent.propTypes = {
   displayMap: PropTypes.bool,
 };
 
-export default TimeLineComponent;
+export default withStyles(styles, { withTheme: true })(TimeLineComponent);

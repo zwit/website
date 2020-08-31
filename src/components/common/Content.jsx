@@ -78,7 +78,7 @@ export default function Content(props) {
     <ThemeProvider theme={selectedTheme}>
       <ContentInner>
         <div className={classes.root}>
-          <div className={classes.header}>
+          {props.displayHeader && <div className={classes.header}>
             {pathname !== HOME && (
               <span className={classes.homeButton}>
                 <Link to="/">
@@ -93,7 +93,7 @@ export default function Content(props) {
               className={classes.themeButton} 
               onClick={() => selectTheme(selectedTheme.name === 'whiteTheme' ? themeBlack : themeWhite)}
             />
-          </div>
+          </div>}
           { props.children }
         </div>
       </ContentInner>

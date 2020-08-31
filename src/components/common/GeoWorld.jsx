@@ -8,7 +8,7 @@ const unknownColor = "#666666";
 
 const useStyles = makeStyles(theme => ({
   map: {
-    height: 750,
+    height: '100vh',
 
     '& path:not([fill="#666666"])': {
       cursor: 'pointer',
@@ -37,7 +37,7 @@ const GeoWorld = ({ data, features, onClick }) => {
         label="properties.name"
         valueFormat=".2s"
         projectionScale={240}
-        projectionTranslation={[ 0.5, 0.65 ]}
+        projectionTranslation={[ 0.5, 0.6 ]}
         projectionRotation={[ 0, 0, 0 ]}
         enableGraticule={true}
         graticuleLineColor="#dddddd"
@@ -49,7 +49,7 @@ const GeoWorld = ({ data, features, onClick }) => {
             direction: 'column',
             justify: true,
             translateX: 20,
-            translateY: -100,
+            translateY: -130,
             itemsSpacing: 0,
             itemWidth: 94,
             itemHeight: 18,

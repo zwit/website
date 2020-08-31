@@ -4,7 +4,7 @@ import Content from './common/Content';
 
 const History = () => (
   <div>
-    <Content>
+    <Content displayHeader={false}>
       <TimeLineComponent 
         type='history' 
         displaySlider={false} 
