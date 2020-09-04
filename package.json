@@ -18,7 +18,7 @@
     "debounce": "^1.2.0",
     "http-proxy-middleware": "^1.0.5",
     "immutable": "^4.0.0-rc.12",
-    "leaflet": "^1.6.0",
+    "leaflet": "^1.7.1",
     "mapbox-gl": "^1.12.0",
     "metamask-logo": "^2.5.0",
     "moment": "^2.27.0",
