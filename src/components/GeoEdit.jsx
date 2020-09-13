@@ -4,7 +4,7 @@ import Content from './common/Content';
 
 const GeoEdit = () => (
   <div>
-    <Content>
+    <Content displayHeader={false} absolute>
       <GeoEditor 
 
       />

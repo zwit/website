@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { ResponsivePie } from '@nivo/pie';
 import { ResponsiveChoropleth } from '@nivo/geo'
-import { franceFeature } from '../utils/geoFeatures';
+import { franceFeature } from '../utils/geo/geoFeatures';
 import { List, Map } from 'immutable';
 import { withStyles } from "@material-ui/core/styles";
 import { ResponsiveLine } from '@nivo/line';

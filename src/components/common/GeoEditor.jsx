@@ -3,7 +3,10 @@ import PropTypes from 'prop-types';
 import { withStyles } from "@material-ui/core/styles";
 import cx from 'classnames';
 import MapBoxGl from './MapBoxGl';
-import { Map, Marker, Popup, TileLayer } from 'react-leaflet';
+import { Map, Marker, Popup, TileLayer, FeatureGroup, Circle } from 'react-leaflet';
+import { EditControl } from "react-leaflet-draw";
+
+const API_KEY = '694375c71ef84a4c8143116dcd40b2c1';
 
 class GeoEditor extends React.Component {
   constructor(props) {
@@ -21,26 +24,31 @@ class GeoEditor extends React.Component {
 
     return (
       <div className={classes.container}>
-        <Map center={[51.505, -0.09]} zoom={13}>
+        <Map center={[42.043351, 8.71296]} zoom={9} className={classes.container}>
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url={"https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=" + API_KEY}
             attribution="&copy; <a href=&quot;http://osm.org/copyright&quot;>OpenStreetMap</a> contributors"
           />
           <Marker position={[51.505, -0.09]}>
             <Popup>A pretty CSS3 popup.<br />Easily customizable.</Popup>
           </Marker>
-        </Map>
 
-        {/* <MapBoxGl
-          containerStyle={{
-            height: '100vh',
-            flex: 1,
-          }}
-          zoom={[2]}
-        />
-        <div>
-          test
-        </div> */}
+          <FeatureGroup>
+            <EditControl
+              position='topright'
+              onEdited={this._onEditPath}
+              onCreated={this._onCreate}
+              onDeleted={this._onDeleted}
+              draw={{
+                circle: false,
+                polyline: false,
+                circlemarker: false,
+                polygon: false,
+                marker: false,
+              }}
+            />
+          </FeatureGroup>
+        </Map>
       </div>
     );
   }

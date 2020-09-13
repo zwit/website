@@ -1,14 +1,32 @@
+import moment from 'moment';
+
 export function stringToColour(str) {
+  return '#' + stringToNumber(str, 16);
+}
+
+export function stringToNumber(str, radix = 10) {
+  if (!str) {
+    return ""
+  }
+  
   var hash = 0;
   for (var i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  var colour = '#';
+  var colour = '';
   for (var i = 0; i < 3; i++) {
     var value = (hash >> (i * 8)) & 0xFF;
-    colour += ('00' + value.toString(16)).substr(-2);
+    colour += ('00' + value.toString(radix)).substr(-2);
   }
   return colour;
+}
+
+export function formatYear(year) {
+  return formatMomentDate(moment(year.toString().padStart(4, '0'), 'YYYY'));
+}
+
+export function formatMomentDate(momentDate) {
+  return momentDate.format("YYYY-MM-DD HH:mm:ss");
 }
 
 export const tmp = [

@@ -8,6 +8,7 @@ import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
 import cx from 'classnames';
 import { YEAR } from "../../utils";
+import { formatMomentDate } from './utils';
 import { animated, useSpring } from "react-spring";
 
 class TimeLine extends React.Component {
@@ -15,12 +16,12 @@ class TimeLine extends React.Component {
     super(props);
 
     let timeSteps = List();
-    for (let index = -5000; index < 2500; index+=100) {
+    for (let index = -6000; index < 2500; index+=100) {
       timeSteps = timeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
     }
 
     let subTimeSteps = List();
-    for (let index = -4950; index < 2500; index+=100) {
+    for (let index = -5950; index < 2500; index+=100) {
       subTimeSteps = subTimeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
     }
 
@@ -46,11 +47,15 @@ class TimeLine extends React.Component {
     this.getPosByDate = this.getPosByDate.bind(this);
     this.getDateByPos = this.getDateByPos.bind(this);
     this.getWidthByDate = this.getWidthByDate.bind(this);
+    this.getSpanByWidth = this.getSpanByWidth.bind(this);
     this.getMarginTop = this.getMarginTop.bind(this);
     this.hasSameDates = this.hasSameDates.bind(this);
     this.startMoving = this.startMoving.bind(this);
     this.stopMoving = this.stopMoving.bind(this);
     this.loop = this.loop.bind(this);
+    this.editRange = this.editRange.bind(this);
+    this.cancelEditRangeMouseMove = this.cancelEditRangeMouseMove.bind(this);
+    this.editRangeMouseMove = this.editRangeMouseMove.bind(this);
   }
 
   getZoom(dateList, timeLineSpan) {
@@ -107,6 +112,12 @@ class TimeLine extends React.Component {
     return this.getDateSpan(date) / zoom;
   }
 
+  getSpanByWidth(width) {
+    const { zoom } = this.state;
+    
+    return (width * zoom);
+  }
+
   hasSameDates(date, dateToCompare) {
     const { dateList } = this.props;
     const yearStart = this.getStartDate(date).year();
@@ -116,6 +127,7 @@ class TimeLine extends React.Component {
   }
 
   componentDidMount() {
+    const { onDrag } = this.props;
     const timeLineSpan = document.getElementById('line-wrapper').getBoundingClientRect().width;
 
     document.addEventListener('keydown', this.onKeyup);
@@ -123,9 +135,13 @@ class TimeLine extends React.Component {
     document.addEventListener('mouseup', this.removeDragLine);
 
     const { currentYear } = this.props;
-    this.setState({ 
+    this.setState(() => ({ 
       timeLineSpan,
       timeLineCenterX: - this.getPosByDate(this.craftDateFromYear(currentYear)) + (timeLineSpan / 2),
+    }), () => {
+      const { timeLineCenterX } = this.state;
+
+      onDrag(this.getDateByPos(timeLineCenterX));
     });
   }
 
@@ -199,10 +215,18 @@ class TimeLine extends React.Component {
   }
 
   dragLine(event) {
+    this.setState({
+      isDragging: true,
+    });
+
     document.addEventListener('mousemove', this.dragLineMouseMove);
   }
 
   removeDragLine() {
+    this.setState({
+      isDragging: false,
+    });
+
     document.removeEventListener('mousemove', this.dragLineMouseMove);
   }
 
@@ -291,14 +315,9 @@ class TimeLine extends React.Component {
   }
 
   onKeyup(event) {
-    const { dateList } = this.props;
-
     if (event.which === 37 || (event.shiftKey && event.keyCode == 9)) {
-
-
         this.startMoving('prev');
     } else if (event.which === 39 || event.which === 8) {
-
         this.startMoving('next');
     }
   }
@@ -311,7 +330,6 @@ class TimeLine extends React.Component {
   }
 
   startMoving(direction) {
-    console.log('dateList.size');
     const { movingTimeout } = this.state;
 
     if (movingTimeout === -1) {      
@@ -322,12 +340,36 @@ class TimeLine extends React.Component {
   loop(direction) {
     const { selectedDate } = this.state;
 
-    this.toggleTo(direction, 5);
-    this.setState({ movingTimeout: setTimeout(this.loop, selectedDate ? 700 : 50, direction) });
+    this.toggleTo(direction, 10);
+    this.setState({ movingTimeout: setTimeout(this.loop, selectedDate ? 700 : 70, direction) });
+  }
+
+  editRange(date, accessor) {
+    const { editMode } = this.props;
+
+    if (!editMode) {
+      return;
+    }
+
+    document.addEventListener('mousemove', (event) => this.editRangeMouseMove(date, accessor, event));
+  }
+
+  editRangeMouseMove(date, accessor, event) {
+    const { postDate } = this.props;
+
+    this.setState({
+      isDragging: true,
+    });
+
+    postDate(accessor, formatMomentDate(moment(date.get(accessor)).add(this.getSpanByWidth(event.movementX))));
+  }
+
+  cancelEditRangeMouseMove() {
+    document.removeEventListener('mousemove', this.editRangeMouseMove);
   }
 
   render() {
-    const { selectedDate, timeLineCenterX, lineHeight, timeSteps, subTimeSteps } = this.state;
+    const { selectedDate, timeLineCenterX, lineHeight, timeSteps, subTimeSteps, isDragging } = this.state;
     const { pointSize, classes, dateList, displayHelpers } = this.props;
 
     return (
@@ -336,13 +378,13 @@ class TimeLine extends React.Component {
           <div className={classes.prevButton} onClick={() => this.toggleTo('prev')}>Prev</div>
           <div className={classes.nextButton} onClick={() => this.toggleTo('next')}>Next</div>
         </div>
-        {displayHelpers && <div
+        {displayHelpers && !selectedDate && <div
           className={classes.tooltip}
           selected={true}
           onSelected={() => {}}
         >{this.getDateByPos(timeLineCenterX)}</div>}
         <div id="line-wrapper" className={classes.lineWrapper}>
-          <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine}/>
+          <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine} onClick={(e) => console.log(e)} />
           {displayHelpers && timeSteps.map((timeStep, index) => (
             <div
               className={classes.timeStep}
@@ -351,6 +393,7 @@ class TimeLine extends React.Component {
                 position: 'absolute',
                 marginLeft: this.getPosByDate(timeStep) + timeLineCenterX - 18,
                 zIndex: -1,
+                transition: selectedDate && !isDragging ? '0.5s all ease' : '0s all ease',
               }}
               selected={true}
               onSelected={() => {}}
@@ -364,8 +407,9 @@ class TimeLine extends React.Component {
               style={{
                 marginTop: -lineHeight - (pointSize / 2) + 33,
                 position: 'absolute',
-                marginLeft: this.getPosByDate(subTimeStep) + timeLineCenterX - 18,
+                marginLeft: this.getPosByDate(subTimeStep) + timeLineCenterX - 15,
                 zIndex: 0,
+                transition: selectedDate && !isDragging ? '0.5s all ease' : '0s all ease',
               }}
               selected={true}
               onSelected={() => {}}
@@ -383,7 +427,7 @@ class TimeLine extends React.Component {
                     marginTop: -lineHeight - (pointSize / 2),
                     position: 'absolute',
                     marginLeft: this.getPosByDate(date) + timeLineCenterX - 18,
-                    transition: '0.5s all ease',
+                    transition: isDragging ? '0s all ease' : '0.5s all ease',
                     zIndex: 10,
                   }}
                   selected={selectedDate && selectedDate.get('id') === date.get('id')}
@@ -395,7 +439,7 @@ class TimeLine extends React.Component {
                   <div 
                     className={cx(classes.rangeElement, {'selected': selectedDate && selectedDate.get('id') === date.get('id')})}
                     style={{ 
-                      marginLeft: this.getPosByDate(date) + timeLineCenterX - 18,
+                      marginLeft: this.getPosByDate(date) + timeLineCenterX,
                       width: this.getWidthByDate(date),
                       background: date.get('background'),
                       color: date.get('color'),
@@ -404,16 +448,28 @@ class TimeLine extends React.Component {
                       height: 50,
                       marginTop: this.getMarginTop(date),
                       cursor: 'pointer',
-                      transition: '0.5s all ease',
+                      transition: isDragging ? '0s all ease' : '0.5s all ease',
                     }}
                     onClick={() => this.toggleTo(date)}
                   >
                     {!this.hasSameDates(date, dateList.get(index - 1)) && 
-                      <div className={cx(classes.rangeDateContainer, classes.rangeDateStartContainer)}><div className={cx(classes.rangeDateStart, classes.rangeDate)}>
-                        {this.getStartDate(date).year()}
-                      </div></div>
+                      <div
+                        onMouseDown={() => this.editRange(date, 'date')}
+                        onMouseUp={this.cancelEditRangeMouseMove}
+                        className={cx(classes.rangeDateContainer, classes.rangeDateStartContainer)}
+                      >
+                        <div className={cx(classes.rangeDateStart, classes.rangeDate)}>
+                          {this.getStartDate(date).year()}
+                        </div>
+                      </div>
                     }
-                    <div className={cx(classes.rangeDateContainer, classes.rangeDateEndContainer)}><div className={cx(classes.rangeDateEnd, classes.rangeDate)}>{this.getEndDate(date).year()}</div></div>
+                    <div
+                      onMouseDown={() => this.editRange(date, 'endDate')}
+                      onMouseUp={this.cancelEditRangeMouseMove}
+                      className={cx(classes.rangeDateContainer, classes.rangeDateEndContainer)}
+                    >
+                      <div className={cx(classes.rangeDateEnd, classes.rangeDate)}>{this.getEndDate(date).year()}</div>
+                    </div>
                     <div className={classes.rangeText}><div className={classes.rangeTextInner}>{date.get('innerText')}</div></div>
                   </div>
                 </>
@@ -680,6 +736,7 @@ TimeLine.defaultProps = {
 
 TimeLine.propTypes = {
   displayHelpers: PropTypes.bool,
+  editMode: PropTypes.bool.isRequired,
 };
 
 export default withStyles(styles, { withTheme: true })(TimeLine);

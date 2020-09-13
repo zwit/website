@@ -71,7 +71,7 @@ const useStyles = makeStyles((theme) => ({
   },
   headerAbsolute: {
     position: 'absolute',
-    zIndex: 10,
+    zIndex: 100,
     width: '100%',
     opacity: 0.7,
     paddingTop: 20,
