@@ -187,7 +187,7 @@ class MapGLContainer extends React.Component {
             {
               this._map.current && this._map.current.getMap() && 
               this._map.current.getMap().getZoom() > 4 && 
-              points.slice(0, 500).map((point, index) => 
+              points.slice(0, 1).map((point, index) => 
                 <Marker
                   key={point.properties.title + parseInt(index)}
                   longitude={point.geometry.coordinates[0]}

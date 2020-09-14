@@ -8,6 +8,7 @@ import { withStyles } from "@material-ui/core/styles";
 import { Map, List } from 'immutable';
 import cx from 'classnames';
 import { YEAR } from "../../utils";
+import cssGradients from "../../utils/cssGradients";
 import { formatMomentDate } from './utils';
 import { animated, useSpring } from "react-spring";
 
@@ -16,13 +17,20 @@ class TimeLine extends React.Component {
     super(props);
 
     let timeSteps = List();
-    for (let index = -6000; index < 2500; index+=100) {
+    for (let index = -10000; index <= 2100; index+=100) {
       timeSteps = timeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
     }
 
     let subTimeSteps = List();
-    for (let index = -5950; index < 2500; index+=100) {
+    for (let index = -9950; index < 2100; index+=100) {
       subTimeSteps = subTimeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
+    }
+
+    let tenthTimeSteps = List();
+    for (let index = 0; index < 2100; index+=10) {
+      if (index % 50) {
+        tenthTimeSteps = tenthTimeSteps.push(Map({ date: moment(index.toString().padStart(4, '0'), 'YYYY'), isDateBC: index < 0 }));
+      }
     }
 
     this.state = {
@@ -34,6 +42,7 @@ class TimeLine extends React.Component {
       zoom: 50000000000,
       timeSteps,
       subTimeSteps,
+      tenthTimeSteps,
       movingTimeout: -1,
     }
 
@@ -369,8 +378,10 @@ class TimeLine extends React.Component {
   }
 
   render() {
-    const { selectedDate, timeLineCenterX, lineHeight, timeSteps, subTimeSteps, isDragging } = this.state;
+    const { selectedDate, timeLineCenterX, lineHeight, timeSteps, subTimeSteps, isDragging, zoom, tenthTimeSteps } = this.state;
     const { pointSize, classes, dateList, displayHelpers } = this.props;
+
+    const isSmallZoom = zoom < 30000000000;
 
     return (
       <div>
@@ -379,10 +390,14 @@ class TimeLine extends React.Component {
           <div className={classes.nextButton} onClick={() => this.toggleTo('next')}>Next</div>
         </div>
         {displayHelpers && !selectedDate && <div
-          className={classes.tooltip}
+          className={cx(classes.tooltipContainer)}
           selected={true}
           onSelected={() => {}}
-        >{this.getDateByPos(timeLineCenterX)}</div>}
+        >
+          <div className={cx(classes.rangeDate, classes.tooltip)}>
+            {this.getDateByPos(timeLineCenterX)}
+          </div>
+        </div>}
         <div id="line-wrapper" className={classes.lineWrapper}>
           <div className={classes.line} id="line" style={{ height: lineHeight}} onMouseDown={this.dragLine} onMouseUp={this.removeDragLine} onClick={(e) => console.log(e)} />
           {displayHelpers && timeSteps.map((timeStep, index) => (
@@ -398,16 +413,32 @@ class TimeLine extends React.Component {
               selected={true}
               onSelected={() => {}}
             >
-              {this.getStartDate(timeStep).year()}
+              <div className={classes.timeStepContainer}><div className={classes.timeStepInner}>{this.getStartDate(timeStep).year()}</div></div>
             </div>
           ))}
           {displayHelpers && subTimeSteps.map((subTimeStep, index) => (
+            <div
+              className={isSmallZoom ? classes.timeStep : classes.subTimeStep}
+              style={{
+                marginTop: -lineHeight - (pointSize / 2) + 33,
+                position: 'absolute',
+                marginLeft: this.getPosByDate(subTimeStep) + timeLineCenterX - 15,
+                zIndex: 0,
+                transition: selectedDate && !isDragging ? '0.5s all ease' : '0s all ease',
+              }}
+              selected={true}
+              onSelected={() => {}}
+            >
+              {isSmallZoom && <div className={classes.timeStepContainer}><div className={classes.timeStepInner}>{this.getStartDate(subTimeStep).year()}</div></div>}
+            </div>
+          ))}
+          {displayHelpers && isSmallZoom && tenthTimeSteps.map((tenthTimeStep, index) => (
             <div
               className={classes.subTimeStep}
               style={{
                 marginTop: -lineHeight - (pointSize / 2) + 33,
                 position: 'absolute',
-                marginLeft: this.getPosByDate(subTimeStep) + timeLineCenterX - 15,
+                marginLeft: this.getPosByDate(tenthTimeStep) + timeLineCenterX - 15,
                 zIndex: 0,
                 transition: selectedDate && !isDragging ? '0.5s all ease' : '0s all ease',
               }}
@@ -441,7 +472,11 @@ class TimeLine extends React.Component {
                     style={{ 
                       marginLeft: this.getPosByDate(date) + timeLineCenterX,
                       width: this.getWidthByDate(date),
-                      background: date.get('background'),
+                      ...cssGradients[Math.floor((Math.random() * (cssGradients.length - 1)))].css,
+                      textShadow: '-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black',
+                      //Math.floor((index % (cssGradients.length - 1)))
+                      //Math.floor((Math.random() * (cssGradients.length - 1)))
+                      // background: date.get('background'),
                       color: date.get('color'),
                       position: 'absolute',
                       display: 'block',
@@ -493,7 +528,6 @@ const styles = theme => ({
   lineWrapper: {
     background: theme.lineColor,
     position: 'relative',
-    margin: '0 60px',
     overflowX: 'hidden',
     overflowY: 'visible',
     clear: 'both',
@@ -509,7 +543,7 @@ const styles = theme => ({
       zIndex: 2,
       top: 0,
       height: '100%',
-      width: '20px',
+      width: '50px',
     },
     '&:after': {
       backgroundImage: `linear-gradient(to left, ${theme.backgroundColor}, rgba(248, 248, 248, 0))`,
@@ -519,7 +553,7 @@ const styles = theme => ({
       zIndex: 2,
       top: 0,
       height: '100%',
-      width: '20px',
+      width: '50px',
     }
   },
   rangeDateStartContainer: {
@@ -603,6 +637,8 @@ const styles = theme => ({
     width: 'fit-content',
   },
   nextButton: {
+    backgroundColor: 'black',
+    zIndex: 20,
     right: '10px',
     '&:after': {
       left: '50%',
@@ -614,6 +650,8 @@ const styles = theme => ({
     },
   },
   prevButton: {
+    backgroundColor: 'black',
+    zIndex: 20,
     '&:after': {
       left: '7px',
       webkitTransform: 'translateY(-50%) rotate(180deg)',
@@ -627,7 +665,7 @@ const styles = theme => ({
     marginLeft: '10px',
 
     '& div': {
-      marginTop: '8px',
+      marginTop: '10px',
       position: 'absolute',
       bottom: 'auto',
       height: '30px',
@@ -691,42 +729,63 @@ const styles = theme => ({
       top: '-20px',
     },
   },
-  tooltip: {
+  timeStepContainer: {
+    width: 50,
+    marginLeft: -5,
+  },
+  timeStepInner: {
+    margin: '0 auto',
+    display: 'table',
+  },
+  tooltipContainer: {
+    width: 50,
     position: 'absolute',
-    zIndex: 100,
-    left: 0,
-    right: 0,
-    top: -45,
     marginLeft: 'auto',
     marginRight: 'auto',
-    textAlign: 'center',
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    top: -10,
 
-    width: '33px',
-    height: '34px',
-    borderRadius: '5px',
-    position: 'absolute',
-    background: '#fff',
-    zIndex: 2,
-    padding: '0 15px',
-    boxShadow: '0 10px 30px rgba(#414856, 0.05)',
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    transition: 'opacity .15s ease-in, top .15s ease-in, width .15s ease-in',
-
-    '&:after': {
-      content: '""',
-      width: '20px',
-      height: '20px',
-      background: '#fff',
-      borderRadius: '3px',
-      position: 'absolute',
-      left: '50%',
-      marginLeft: '-10px',
-      bottom: '-8px',
-      transform: 'rotate(45deg)',
-      zIndex: -1,
+    '&:hover': {
+      zIndex: 12,
     }
+  },
+  tooltip: {
+    // zIndex: 100,
+    // left: 0,
+    // right: 0,
+    // top: -45,
+    // marginLeft: 'auto',
+    // marginRight: 'auto',
+    // textAlign: 'center',
+
+    // width: '33px',
+    // height: '34px',
+    // borderRadius: '5px',
+    // position: 'absolute',
+    // background: '#fff',
+    // zIndex: 2,
+    // padding: '0 15px',
+    // boxShadow: '0 10px 30px rgba(#414856, 0.05)',
+    // display: 'flex',
+    // justifyContent: 'space-around',
+    // alignItems: 'center',
+    // transition: 'opacity .15s ease-in, top .15s ease-in, width .15s ease-in',
+
+    // '&:after': {
+    //   content: '""',
+    //   width: '20px',
+    //   height: '20px',
+    //   background: '#fff',
+    //   borderRadius: '3px',
+    //   position: 'absolute',
+    //   left: '50%',
+    //   marginLeft: '-10px',
+    //   bottom: '-8px',
+    //   transform: 'rotate(45deg)',
+    //   zIndex: -1,
+    // }
   },
 });
 

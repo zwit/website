@@ -710,9 +710,10 @@ const styles = theme => ({
   },
   timeLine: {
     position: 'absolute',
-    opacity: 0.65,
+    opacity: 1,
     width: '100vw',
-    bottom: 20,
+    bottom: 0,
+    zIndex: 10,
   },
   drawer: {
     color: theme.color,

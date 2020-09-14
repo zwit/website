@@ -5,15 +5,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import { deepOrange } from '@material-ui/core/colors';
 import { Link } from 'react-router-dom';
 import matrix from '../images/matrix.png';
-import tintin from '../images/tintin.png';
-import eratosthene from '../images/eratosthene.png';
-import interstellarBooks from '../images/interstellar-books.png';
-import yellowSubmarine from '../images/yellow-submarine.png';
-import oss117 from '../images/oss117.png';
 import castle from '../images/castle.jpg';
 import ai from '../images/ai.png';
 import stats from '../images/stats.png';
-import geojson from '../images/geojson.png';
+import hiking from '../images/hiking.jpg';
 import Content from './common/Content';
 
 const useStyles = makeStyles((theme) => ({
@@ -47,9 +42,9 @@ const Home = () => {
     description: 'ML test',
     position: 2,
   }), Map({
-    url: '/geoedit',
-    title: 'GeoJSON Editor',
-    image: geojson,
+    url: '/hinkingOfflineMap',
+    title: 'Hiking Offline Map',
+    image: hiking,
     description: '',
     position: 3,
   }), Map({

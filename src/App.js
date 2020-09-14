@@ -15,6 +15,7 @@ import Ml from './components/Ml';
 import Geopol from './components/Geopol';
 import Culture from './components/Culture';
 import GeoEdit from './components/GeoEdit';
+import CssBackgrounds from './components/CssBackgrounds';
 
 class App extends React.Component {
   constructor(props) {
@@ -37,7 +38,8 @@ class App extends React.Component {
             <Route path='/ml' component={Ml} />
             <Route path='/geopol' component={Geopol} />
             <Route path='/culture' component={Culture} />
-            <Route path='/geoedit' component={GeoEdit} />
+            <Route path='/hinkingOfflineMap' component={GeoEdit} />
+            <Route path='/cssBackgrounds' component={CssBackgrounds} />
           </Switch>
         </BrowserRouter>
       </>
