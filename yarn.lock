@@ -1665,10 +1665,10 @@
     call-me-maybe "^1.0.1"
     glob-to-regexp "^0.3.0"
 
-"@nebula.gl/edit-modes@0.21.0":
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/@nebula.gl/edit-modes/-/edit-modes-0.21.0.tgz#f5bf98df4e0b6be1d70c080b173588089e65f62d"
-  integrity sha512-h6D6BKlOdgx6bv7TAhWRE9nUXI17jojdpp0pY7i8XczEkhunGYY7KbIzIHG/AUhFdoJZorGgJYJrVTccbr+AtQ==
+"@nebula.gl/edit-modes@0.21.1":
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/@nebula.gl/edit-modes/-/edit-modes-0.21.1.tgz#9f72b10329a7e699655b66aee362555a0ad79316"
+  integrity sha512-S/A2I7mgONuE7auGmJ08ibU/xV9fUIPB2XKNCV05RCtlnFQBRu1lXLH2rgQKb+67TvinnozYZh+ZK7ME4FlyZA==
   dependencies:
     "@turf/bbox" ">=4.0.0"
     "@turf/bbox-polygon" ">=4.0.0"
@@ -11406,13 +11406,13 @@ react-lifecycles-compat@^3.0.2:
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
 
-react-map-gl-draw@^0.21.0:
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/react-map-gl-draw/-/react-map-gl-draw-0.21.0.tgz#39ef6a93bd0e9ffde251590c0b2773f244ae4c13"
-  integrity sha512-E+SDysbO2TOGyWar0UPA2EzX1ZQFH60i9ilAxWsf4zagzBhdg/j+dw0eA8oOyKsgBwfvqJQm+LbopSpD9J/TIg==
+react-map-gl-draw@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/react-map-gl-draw/-/react-map-gl-draw-0.21.1.tgz#cb0d45eb56dfe48b9186304aeea1e4b8bcfd4f95"
+  integrity sha512-dTT8Gnst2fmr833UeVB0t4KMmv8b0+avyjsdvGwXSW0YhDUHO6zUXj1qc18ICUSIYdDiQndQx+uolyj9iwT+fg==
   dependencies:
     "@math.gl/web-mercator" "^3.1.3"
-    "@nebula.gl/edit-modes" "0.21.0"
+    "@nebula.gl/edit-modes" "0.21.1"
     "@turf/helpers" "^6.1.4"
     "@types/react-map-gl" "5.2.2"
     mjolnir.js "^2.4.0"
