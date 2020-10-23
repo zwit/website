@@ -1798,14 +1798,14 @@
     recompose "^0.30.0"
     resize-observer-polyfill "^1.5.1"
 
-"@nivo/geo@^0.63.0":
-  version "0.63.0"
-  resolved "https://registry.yarnpkg.com/@nivo/geo/-/geo-0.63.0.tgz#0060f5f37bc40631389fc69f150a9d87cf46ceb0"
-  integrity sha512-yc6CiYbnkOTKeUCW5BWDKPzZc9GCw64Gs1CQXvndeOU8aRViZwW2pGSVADTZWpgwCw//O42YnEP9EqTUm3LQWw==
+"@nivo/geo@^0.63.1":
+  version "0.63.1"
+  resolved "https://registry.yarnpkg.com/@nivo/geo/-/geo-0.63.1.tgz#45e8d4cee2bd26cf88d19bf6933b94477263558d"
+  integrity sha512-Aotzsq4tF6/Vhxsa6Mi5/zAdsRFOy0+cSEXQ/1c0cH/W0zk5R0XkWU+4gCqJdUzuivsvCnfK4HX4Ap7V9g13MA==
   dependencies:
     "@nivo/colors" "0.63.0"
-    "@nivo/core" "0.63.0"
-    "@nivo/legends" "0.63.0"
+    "@nivo/core" "0.63.1"
+    "@nivo/legends" "0.63.1"
     "@nivo/tooltip" "0.63.0"
     d3-format "^1.4.4"
     d3-geo "^1.11.3"
