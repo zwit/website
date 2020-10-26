@@ -12242,10 +12242,10 @@ react-map-gl@^5.2.9:
     react-virtualized-auto-sizer "^1.0.2"
     viewport-mercator-project "^6.2.3 || ^7.0.1"
 
-react-mapbox-gl@^4.8.6:
-  version "4.8.6"
-  resolved "https://registry.yarnpkg.com/react-mapbox-gl/-/react-mapbox-gl-4.8.6.tgz#c3841bac882a297f60efce50cac4060e3a1c3f81"
-  integrity sha512-e6rJ4GFye2AIu10I0a0OfleIWYkigIMIysoSKCA4Wg5YHa52JRHq2F3x0c0cnhqfz1txnUhXUbkx2qqs8B6kKQ==
+react-mapbox-gl@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/react-mapbox-gl/-/react-mapbox-gl-5.0.0.tgz#5afb3fa8921760df4f5c97d354e72b10e23e04e6"
+  integrity sha512-Z29/RpG5TpVPQliHI8GWMbEP6j7JZpBMAXL2ZQl9onJXg+0uDStG5bjs0cMfo1l//E/4ZcxBmLmCyKTs5GyFYA==
   dependencies:
     "@turf/bbox" "4.7.3"
     "@turf/helpers" "4.7.3"
