@@ -1763,23 +1763,6 @@
     react-motion "^0.5.2"
     recompose "^0.30.0"
 
-"@nivo/core@0.63.0":
-  version "0.63.0"
-  resolved "https://registry.yarnpkg.com/@nivo/core/-/core-0.63.0.tgz#601561b1f7ca9df049c5216300b0df73515852da"
-  integrity sha512-baGSWH1KLsZ5I4jb6oRc4ZREPgbrjJFaGs5mQAUrI1fkymGxmQbgLPlxA20cO/PU5Ikpuagsq8AKzuJHdZ/Ttw==
-  dependencies:
-    d3-color "^1.2.3"
-    d3-format "^1.4.4"
-    d3-hierarchy "^1.1.8"
-    d3-scale "^3.0.0"
-    d3-scale-chromatic "^1.3.3"
-    d3-shape "^1.3.5"
-    d3-time-format "^2.1.3"
-    lodash "^4.17.11"
-    react-spring "^8.0.27"
-    recompose "^0.30.0"
-    resize-observer-polyfill "^1.5.1"
-
 "@nivo/core@0.63.1":
   version "0.63.1"
   resolved "https://registry.yarnpkg.com/@nivo/core/-/core-0.63.1.tgz#74aeedcdccc70b49a6baedded993dc9b9f1332d7"
@@ -1817,15 +1800,6 @@
   integrity sha512-0Vda6OyftmeL0j1wKqDe64qXQ1t+4h/GVxZK4wUXfFHkxHmLOnX+KFPwAWtHaYwmBb8RuzBlZfLipkKk2M3Dwg==
   dependencies:
     "@nivo/core" "0.62.0"
-    lodash "^4.17.11"
-    recompose "^0.30.0"
-
-"@nivo/legends@0.63.0":
-  version "0.63.0"
-  resolved "https://registry.yarnpkg.com/@nivo/legends/-/legends-0.63.0.tgz#a04f712d1dbaed194faeac2b0aef22fd806f7d9f"
-  integrity sha512-PZgSUrXw9J/CW9ISKLJWvx0UypodpUYMRxejv0INsmHdLYEyi/9rxX+67pOY0utqCZ5KFWIOk5lwFqGcNY0+Jw==
-  dependencies:
-    "@nivo/core" "0.63.0"
     lodash "^4.17.11"
     recompose "^0.30.0"
 
@@ -11509,10 +11483,10 @@ react-map-gl@^5.2.9:
     react-virtualized-auto-sizer "^1.0.2"
     viewport-mercator-project "^6.2.3 || ^7.0.1"
 
-react-mapbox-gl@^4.8.6:
-  version "4.8.6"
-  resolved "https://registry.yarnpkg.com/react-mapbox-gl/-/react-mapbox-gl-4.8.6.tgz#c3841bac882a297f60efce50cac4060e3a1c3f81"
-  integrity sha512-e6rJ4GFye2AIu10I0a0OfleIWYkigIMIysoSKCA4Wg5YHa52JRHq2F3x0c0cnhqfz1txnUhXUbkx2qqs8B6kKQ==
+react-mapbox-gl@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/react-mapbox-gl/-/react-mapbox-gl-5.0.0.tgz#5afb3fa8921760df4f5c97d354e72b10e23e04e6"
+  integrity sha512-Z29/RpG5TpVPQliHI8GWMbEP6j7JZpBMAXL2ZQl9onJXg+0uDStG5bjs0cMfo1l//E/4ZcxBmLmCyKTs5GyFYA==
   dependencies:
     "@turf/bbox" "4.7.3"
     "@turf/helpers" "4.7.3"
