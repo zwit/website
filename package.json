@@ -27,7 +27,7 @@
     "mapbox-gl": "^1.12.0",
     "metamask-logo": "^2.5.0",
     "moment": "^2.29.1",
-    "node-sass": "^4.14.1",
+    "node-sass": "^6.0.0",
     "quill-image-uploader": "^1.2.2",
     "react": "^16.14.0",
     "react-color": "^2.18.1",
